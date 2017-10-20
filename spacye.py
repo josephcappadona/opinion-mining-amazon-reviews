@@ -1,3 +1,9 @@
+"""
+Initial dependency parsing attempt.
+
+Sumit/Joe (10/9): miscategorized some parts of speech, try using stanford core NLP
+"""
+
 import spacy
 import json
 import string
