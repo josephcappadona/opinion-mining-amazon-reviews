@@ -1,6 +1,7 @@
 # Aggregating Insights from Amazon Product Reviews
 ## Senior Design 2017-18, University of Pennsylvania
 Team: Raymond Yin, Carolina Zheng, Sumit Shyamsukha, Joe Cappadona
+
 Advisor: Prof. Chris Callison-Burch
 
 # What is this?
