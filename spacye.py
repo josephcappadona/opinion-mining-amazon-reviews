@@ -3,58 +3,68 @@ Initial dependency parsing attempt.
 
 Sumit/Joe (10/9): miscategorized some parts of speech, try using stanford core NLP
 """
-
-import spacy
+import sys
+import time
+import spacy # download models w "python -m spacy.en.download all"
 import json
-import string
+import pickle
 from pprint import pprint
 from collections import defaultdict
 from nltk import Tree
 
+if len(sys.argv) < 3:
+  raise ValueError
+
+MAX_ = 300  # set to number of reviews you want to process (for short tests)
+filepath = sys.argv[1]  # path to review data
+filename = filepath.split('/')[-1]
+OUTPUT_DIR = sys.argv[2]  # path to output directory
+
+
 en_nlp = spacy.load('en')
 
-filename = "reviews_Baby_5.json"
-print ("Opening file {}".format(filename))
+print ("Opening file {}".format(filepath))
 
-file = open(filename, 'r')
-print ("Reading file {}".format(filename))
-l = file.readlines()
+file_ = open(filepath, 'r')
 
 noun_map = defaultdict(int)
 adj_map = defaultdict(int)
 adv_map = defaultdict(int)
 very_map = defaultdict(int)
 all_map = defaultdict(int)
-review_jsons = [json.loads(review_str) for review_str in l]
-i = -1
-b = False
-for review_json in review_jsons:
-	i += 1
-	if i % 100 == 0:
-		print ("Processing review {}".format(i))
-	doc = en_nlp(review_json['reviewText'])
-	for w in doc:
-		word = w.text
-		pos = w.pos_
-		if pos == "NOUN":
-			noun_map[word] += 1
-			all_map[(w.text, w.pos_)] += 1
-		elif pos == "ADJ":
-			adj_map[word] += 1
-			all_map[(w.text, w.pos_)] += 1
-		elif pos == "ADV":
-			adv_map[word] += 1
-			all_map[(w.text, w.pos_)] += 1
-		if b == True:
-			very_map[word] += 1
-			b = False
-		if word == "very":
-			b = True
-	if i == 3000:
-		break
+review_jsons = []
+i = 0
+print ("Processing file {}\n".format(filepath))
+for line in file_:
+  review_json = json.loads(line)
+  review_jsons += review_json
+  
+  b = False
+  i += 1
+  if i > MAX_:
+    break
+  if i % 100 == 0:
+    print ("Processing review {}".format(i))
+
+  doc = en_nlp(review_json['reviewText'])
+  for el in doc:
+    word = el.text
+    pos = el.pos_
+    all_map[(word, pos)] += 1
+    if pos == "NOUN":
+      noun_map[word] += 1
+    elif pos == "ADJ":
+      adj_map[word] += 1
+    elif pos == "ADV":
+      adv_map[word] += 1
 
 pprint(sorted(all_map.items(), key=lambda e:e[1]))
-pprint(sorted(very_map.items(), key=lambda e:e[1]))
+output_file = OUTPUT_DIR + "/{}_{}.pickle".format(filename, str(int(time.time())))
+with open(output_file, 'w+') as outfile:
+  pickle.dump(all_map, outfile, protocol=pickle.HIGHEST_PROTOCOL)
+
+file_.close()
+
 '''
 doc = en_nlp(review['reviewText'])
 
@@ -71,3 +81,4 @@ print (review['reviewText'])
 
 print([(w.text, w.pos_) for w in doc])
 '''
+
