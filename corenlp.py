@@ -11,20 +11,21 @@ import json
 import pickle
 import sys
 import time
+from datetime import datetime
 from helper import traverse
 
 # parse args
 if len(sys.argv) < 3:
   raise ValueError
 
-MAX_ = 500  # set to number of reviews you want to process (for short tests)
+MAX_ = 10  # set to number of reviews you want to process (for short tests)
 filepath = sys.argv[1]  # path to review data
 filename = filepath.split('/')[-1]
 OUTPUT_DIR = sys.argv[2]  # path to output directory
 
 from stanford_corenlp_pywrapper import CoreNLP
 # for CoreNLP wrapper API, see https://github.com/brendano/stanford_corenlp_pywrapper
-proc = CoreNLP("parse", corenlp_jars=["/mnt/castor/seas_home/j/jcapp/Documents/SeniorDesign/CoreNLP/stanford-corenlp-full-2017-06-09/*"])
+proc = CoreNLP("parse", corenlp_jars=["../CoreNLP/*"])
 
 review_file = open(filepath, 'r')
 reviews_processed = []
@@ -35,7 +36,7 @@ for review in review_file:
   review_json = json.loads(review)
   parse = proc.parse_doc(review_json['reviewText'])
   
-  print "\n\n{} {}\n------------------".format(review_json['ReviewerID'], review_json['asin'])
+  print "\n\n{} {}\n------------------".format(review_json['reviewerID'], review_json['asin'])
 
   results = []
   for sentence in parse['sentences']:
@@ -145,7 +146,7 @@ for review in review_file:
   reviews_processed.append(results)
 review_file.close()
 
-outfilename = "{}_{}_{}.pickle".format(sys.argv[0].split('/')[0], filename, int(time.time()))
+outfilename = "{}_{}_{:%Y-%m-%d_%H-%M-%S}.pickle".format(sys.argv[0].split('/')[0], filename, datetime.now())
 outfilepath = OUTPUT_DIR + "/" + outfilename
 with open(outfilepath, 'w+') as outfile:
   for review_processed in reviews_processed:
