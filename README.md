@@ -20,3 +20,14 @@ We are building a webapp that aggregates Amazon review opinions about a productâ
 [Proposal Review Presentation, 10/12](https://docs.google.com/presentation/d/1Mk74AG5LYhIhdV7RcbA-OsCsA1ILOk9LSzZt8JfhTtg/)
 
 [Lightning Talk, 10/19](https://docs.google.com/document/d/1VA6_tRsiSYoE_d5CvkZ4U52NRldFUp5Mq_QTt4HwOsw/)
+
+# Local Directory Setup
+1. Create dir `../data/` and place review data within
+2. Create dir `../output/` qsub script output
+3. Create dir `../results/` corenlp.py processing output
+4. Create dir `../virtualenv/` and instantiate with `./requirements.txt`
+5. Create dir `../CoreNLP/` and place CoreNLP jars within
+
+# How to Use
+1. Run `qsub dispath_corenlp.sh` from nlpgrid head node
+2. Find output in pickle format, one review per line, in `../results/` labeled with timestamp (YYYY-MM-DD\_HH-MM-SS
