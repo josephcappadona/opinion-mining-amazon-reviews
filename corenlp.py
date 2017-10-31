@@ -2,12 +2,13 @@
 Initial POS tagging and dependency parsing attempt using Stanford CoreNLP.
 
 Joe (10/30): Pulls out some NN-JJ pairs effectively, but most opinion sentences are irregular
-              and appear difficult to parse correctly
+              and appear difficult to parse correctly. Doesn't handle contractions like "n't".
 '''
 from pprint import pprint
 from nltk import ParentedTree, Tree
 from collections import defaultdict
 import json
+import pickle
 import sys
 import time
 from helper import traverse
@@ -16,7 +17,7 @@ from helper import traverse
 if len(sys.argv) < 3:
   raise ValueError
 
-MAX_ = 1000  # set to number of reviews you want to process (for short tests)
+MAX_ = 500  # set to number of reviews you want to process (for short tests)
 filepath = sys.argv[1]  # path to review data
 filename = filepath.split('/')[-1]
 OUTPUT_DIR = sys.argv[2]  # path to output directory
@@ -33,6 +34,8 @@ for review in review_file:
     break
   review_json = json.loads(review)
   parse = proc.parse_doc(review_json['reviewText'])
+  
+  print "\n\n{} {}\n------------------".format(review_json['ReviewerID'], review_json['asin'])
 
   results = []
   for sentence in parse['sentences']:
@@ -102,17 +105,18 @@ for review in review_file:
               v_vp_map[index] = cur_node
               nn_vp_map[j].append(cur_node)
 
-    text = ' '.join(tokens)
-    print "\n{}".format(text.encode('utf-8'))
+    print tokens
     print  "======"
     sentence_features = {}
     for nn in nsubjs:
       nn_ = defaultdict(list)
       
-      nps = ','.join([' '.join(np_tree.leaves())for np_tree in nn_np_map[nn]])
-      print "\tNN: {} ({})".format(tokens[nn], nps.encode('utf-8'))
-      for np_tree in nn_np_map[nn]:
-        nn_['np'].append(' '.join(np_tree.leaves()))
+      nps = [np_tree.leaves() for np_tree in nn_np_map[nn]]
+      nn_['np'] = nps
+      m = "\tNN: {}".format(tokens[nn], nps)
+      if nps:
+        m += " ({})".format([' '.join(np) for np in nps])
+      print m
 
       for amod in nn_amods[nn]:
         print "\t\tJJ: {}".format(tokens[amod])
@@ -122,30 +126,30 @@ for review in review_file:
         m = "\t\tJJ: {}".format(tokens[jj])
         p = None
         if jj in jj_vp_map:
-          vp = ' '.join(jj_vp_map[jj].leaves())
+          vp = jj_vp_map[jj]
           p = vp
         elif jj in jj_adjp_map:
-          adjp = ' '.join(jj_adjp_map[jj].leaves())
+          adjp = jj_adjp_map[jj]
           if adjp != tokens[jj]:
             p = adjp
-          m += " ({})".format(p)
-        nn_['jj'].append((tokens[jj],p))
+          m += " ({})".format(p.leaves())
+        nn_['jj'].append((tokens[jj],p.leaves() if p else None))
         print m 
       for vp_tree in nn_vp_map[nn]:
-        vp = ' '.join(vp_tree.leaves())
+        vp = vp_tree.leaves()
         print "\t\tVP: {}".format(vp)
         nn_['vp'].append(vp)
       print ""
-      sentence_features[tokens[nn]] = nn_
-    results.append((text, sentence_features))
+      sentence_features[tuple(tokens[nn])] = nn_
+    results.append((tokens, sentence_features))
   reviews_processed.append(results)
 review_file.close()
 
-outfilename = "{}_{}_{}.json".format(sys.argv[0].split('/')[0], filename, int(time.time()))
+outfilename = "{}_{}_{}.pickle".format(sys.argv[0].split('/')[0], filename, int(time.time()))
 outfilepath = OUTPUT_DIR + "/" + outfilename
 with open(outfilepath, 'w+') as outfile:
   for review_processed in reviews_processed:
-    outfile.write(json.dumps(review_processed) + '\n')
+    outfile.write(pickle.dumps(review_processed) + '\n')
 
 time_elapsed = time.time() - start_time
 print "Time elapsed (s): {}".format(time_elapsed)
