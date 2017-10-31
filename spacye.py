@@ -11,6 +11,7 @@ import pickle
 from pprint import pprint
 from collections import defaultdict
 from nltk import Tree
+from spacy.symbols import nsubj, VERB
 
 if len(sys.argv) < 3:
   raise ValueError
@@ -45,11 +46,11 @@ for line in file_:
     break
   if i % 100 == 0:
     print ("Processing review {}".format(i))
-
+  
   doc = en_nlp(review_json['reviewText'])
-  for el in doc:
-    word = el.text
-    pos = el.pos_
+  for element in doc:
+    word = element.text
+    pos = element.pos_
     all_map[(word, pos)] += 1
     if pos == "NOUN":
       noun_map[word] += 1

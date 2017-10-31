@@ -17,6 +17,7 @@ regex==2017.9.23
 requests==2.18.4
 six==1.11.0
 spacy==1.9.0
+-e git+https://github.com/brendano/stanford_corenlp_pywrapper@25fd117876e79a68667d05bff94461590339f588#egg=stanford_corenlp_pywrapper
 termcolor==1.1.0
 thinc==6.5.2
 toolz==0.8.2
