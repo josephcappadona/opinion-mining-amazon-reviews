@@ -30,4 +30,6 @@ We are building a webapp that aggregates Amazon review opinions about a productâ
 
 # How to Use
 1. Run `qsub dispath_corenlp.sh` from nlpgrid head node
-2. Find output in pickle format, one review per line, in `../results/` labeled with timestamp (YYYY-MM-DD\_HH-MM-SS
+2. Monitor job with `qstat | grep my_pennkey`
+3. Follow stdout with `tail -f ../output/dispatch_corenlp.out`, stderr with `tail -f ../output/dispatch_corenlp.err`
+4. Once complete, find output in pickle format, one review per line, in `../results/` labeled with timestamp (YYYY-MM-DD\_HH-MM-SS
