@@ -2,7 +2,7 @@
 
 #$ -o ../output/dispatch_corenlp.out
 #$ -e ../output/dispatch_corenlp.err
-#$ -l h_rt=7:30:00
+#$ -l h_rt=00:10:00
 #$ -l 'arch=*64*'
 #$ -S /bin/bash
 #$ -cwd
@@ -22,8 +22,9 @@ echo "Start - "
 
 source ../virtualenv/bin/activate
 
-python corenlp.py ../data/reviews_Cell_Phones_and_Accessories_5.json ../results/
+python corenlp.py ../data/reviews_Cell_Phones_and_Accessories_5.json ../results/ 100 0
 
 echo "Finish - "
 /bin/date
 
+echo $1
