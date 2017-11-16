@@ -11,6 +11,7 @@ import json
 import pickle
 import sys
 import time
+import os
 from datetime import datetime
 from helper import traverse
 
@@ -29,15 +30,13 @@ from stanford_corenlp_pywrapper import CoreNLP
 proc = CoreNLP("parse", corenlp_jars=["../CoreNLP/*"])
 
 review_file = open(filepath, 'r')
-i = 0
-for _ in review_file:
-  i += 1
-  if i == START_AFTER:
-    break
+
+_ = [review_file.readline() for _ in range(START_AFTER)]
+reviews = [review_file.readline() for _ in range(MAX_)]
 
 reviews_processed = []
 start_time = time.time()
-for review in review_file:
+for review in reviews:
   if len(reviews_processed) >= MAX_:
     break
   review_json = json.loads(review)
@@ -176,8 +175,8 @@ for review in review_file:
         nn_['vp'].append(vp)
       print ""
       sentence_features[tokens[nn]] = nn_
-    results.append((tokens, sentence_features, review_json))
-  reviews_processed.append(results)
+    results.append((tokens, sentence_features))
+  reviews_processed.append((results, review_json))
 review_file.close()
 
 outfilename = "{}_{}_{:%Y-%m-%d_%H-%M-%S}.pickle".format(sys.argv[0].split('/')[0], filename, datetime.now())

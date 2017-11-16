@@ -8,4 +8,3 @@ def traverse(tree):
     elif isinstance(el, Tree):
       for leaf in traverse(el):
         yield leaf
-
