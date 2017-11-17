@@ -17,13 +17,14 @@ from helper import traverse
 
 # parse args
 if len(sys.argv) < 5:
-  raise ValueError
+  print "Usage: python corenlp.py review_data_path output_dir max [skip]"
+  exit()
 
 filepath = sys.argv[1]  # path to review data
 filename = filepath.split('/')[-1]
 OUTPUT_DIR = sys.argv[2]  # path to output directory
 MAX_ = int(sys.argv[3])  # number of reviews you want to process (for short tests)
-START_AFTER = int(sys.argv[4])
+START_AFTER = int(sys.argv[4]) if len(sys.argv) >= 5 else 0
 
 from stanford_corenlp_pywrapper import CoreNLP
 # for CoreNLP wrapper API, see https://github.com/brendano/stanford_corenlp_pywrapper
@@ -87,9 +88,7 @@ for review in reviews:
         if "amod" in deps[index]:
           nsubjs.add(index)
           nn_amods[index].extend(deps[index]["amod"])
-          if tokens[index] == "quality":
-            print "\n\n\n\n>>> QUALITY: ", nn_amods[index]
-          # TODO: get full ADJP for JJ
+          # TODO: get full ADJP for JJ ?
           while cur_node:
             # traverse tree backward to find full noun phrase containing this noun
             if cur_node.label() == "NP":
@@ -142,10 +141,17 @@ for review in reviews:
 
     print "tokens:",  tokens
     print  "="*60
-    sentence_features = {}
+    sentence_features = []
     for nn in nsubjs:
       nn_ = defaultdict(list)
       
+      ''' Abbreviated output, just NN->[JJ] map '''
+      sentence_features.append((tokens[nn], [tokens[jj] for jj in nn_amods[nn] + nn_jj_map[nn]]))
+      print "\tNP={}\n\t\t[JJ]={}".format(tokens[nn], sentence_features)
+
+
+      ''' Extended output, NN->([JJ], [VP], [ADJP]) map '''
+      '''
       nps = [np_tree.leaves() for np_tree in nn_np_map[nn]]
       nn_['np'] = nps
       m = "\tNN: {}".format(tokens[nn], nps)
@@ -175,15 +181,15 @@ for review in reviews:
         nn_['vp'].append(vp)
       print ""
       sentence_features[tokens[nn]] = nn_
-    results.append((tokens, sentence_features))
-  reviews_processed.append((results, review_json))
+      '''
+    results.extend(sentence_features)
+  reviews_processed.append((review_json, results))
 review_file.close()
 
 outfilename = "{}_{}_{:%Y-%m-%d_%H-%M-%S}.pickle".format(sys.argv[0].split('/')[0], filename, datetime.now())
 outfilepath = OUTPUT_DIR + "/" + outfilename
 with open(outfilepath, 'w+') as outfile:
-  for review_processed in reviews_processed:
-    pickle.dump(review_processed, outfile, -1)
+  pickle.dump(reviews_processed, outfile, -1)
 
 time_elapsed = time.time() - start_time
 print "Time elapsed (s): {}".format(time_elapsed)

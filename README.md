@@ -32,4 +32,8 @@ We are building a webapp that aggregates Amazon review opinions about a productâ
 1. Run `qsub dispath_corenlp.sh` from nlpgrid head node
 2. Monitor job with `qstat | grep my_pennkey`
 3. Follow stdout with `tail -f ../output/dispatch_corenlp.out`, stderr with `tail -f ../output/dispatch_corenlp.err`
-4. Once complete, find output in pickle format, one review per line, in `../results/` labeled with timestamp (YYYY-MM-DD\_HH-MM-SS
+4. Once complete, find output in pickle format in `../results/` labeled with timestamp (YYYY-MM-DD\_HH-MM-SS)
+  * `parsed_reviews = pickle.load(open("../results/output.pickle"))`
+  * `review_info, review_features = parsed_reviews[0]`
+  * `noun, adjs = review_features[0]`
+  * `review_info = {"asin": , "reviewerID": , "overall": , "reviewText", ...}`
