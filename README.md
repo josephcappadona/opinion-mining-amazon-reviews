@@ -33,8 +33,19 @@ We are building a webapp that aggregates Amazon review opinions about a productâ
 2. Monitor job with `qstat | grep my_pennkey`
 3. Follow stdout with `tail -f ../output/dispatch_corenlp.out`, stderr with `tail -f ../output/dispatch_corenlp.err`
 4. Once complete, find output in pickle format in `../results/` labeled with timestamp (YYYY-MM-DD\_HH-MM-SS)
-  * `parsed_reviews = pickle.load(open("../results/output.pickle"))`
-  * `review_info, sentences = parsed_reviews[0]`
-  * `review_info = {"asin": , "reviewerID": , "overall": , "reviewText", ...}`
-  * `sentence_tokens, sentence_features = sentences[0]`
-  * `nn_compound, amods, cops = sentence_features[0]`
+  ```
+  parsed_reviews = pickle.load(open("../results/output.pickle"))`
+
+  for review_info, sentences in parsed_reviews:
+    print review_info["asin"]
+    print review_info["reviewerID"]
+    print review_info["overall"]
+    print review_info["review_text"]
+    for sentence_tokens, sentence_features in sentences:
+      print "\t{}".format(sentence_tokens)
+      for nn_compound, amod_jjs, cop_jjs in sentence_features:
+        print "\t\t{}".format(nn_compound)
+        print "\t\t\t{}".format(','.join(amod_jjs))
+        print "\t\t\t{}".format(','.join(cop_jjs)
+    print "\n"
+  ```
