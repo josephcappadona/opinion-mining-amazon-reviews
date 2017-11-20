@@ -38,8 +38,6 @@ reviews = [review_file.readline() for _ in range(MAX_)]
 reviews_processed = []
 start_time = time.time()
 for review in reviews:
-  if len(reviews_processed) >= MAX_:
-    break
   review_json = json.loads(review)
   parse = proc.parse_doc(review_json['reviewText'])
   
@@ -145,50 +143,15 @@ for review in reviews:
 
     print "tokens:",  tokens
     print  "="*60
+    
     sentence_features = []
     for nn in nsubjs:
-      nn_ = defaultdict(list)
-      
-      ''' Abbreviated output, just NN->[JJ] map '''
       nn_compound = nn_compound_map[nn] if nn in nn_compound_map else tokens[nn]
       amod_jjs = [tokens[jj] for jj in nn_amods[nn]]
       cop_jjs = [tokens[jj] for jj in nn_jj_map[nn]]
       sentence_features.append((nn_compound, amod_jjs, cop_jjs))
-      print "\tNP={}\n\t\t[JJ]={}".format(tokens[nn], sentence_features)
-
-
-      ''' Extended output, NN->([JJ], [VP], [ADJP]) map '''
-      '''
-      nps = [np_tree.leaves() for np_tree in nn_np_map[nn]]
-      nn_['np'] = nps
-      m = "\tNN: {}".format(tokens[nn], nps)
-      if nps:
-        m += " ({})".format([' '.join(np) for np in nps])
-      print m
-
-      for amod in nn_amods[nn]:
-        print "\t\tJJ: {}".format(tokens[amod])
-        nn_['jj'].append((tokens[amod], ))
-
-      for jj in nn_jj_map[nn]:
-        m = "\t\tJJ: {}".format(tokens[jj])
-        p = None
-        if jj in jj_vp_map: # if this adjective is part of verb phrase
-          vp = jj_vp_map[jj]
-          p = vp
-        elif jj in jj_adjp_map: # elif this adjective is part of an adj phrase
-          adjp = jj_adjp_map[jj]
-          p = adjp
-        m += " ({})".format(p.leaves()) if p else ""
-        nn_['jj'].append((tokens[jj],p.leaves() if p else None))
-        print m 
-      for vp_tree in nn_vp_map[nn]:
-        vp = vp_tree.leaves()
-        print "\t\tVP: {}".format(vp)
-        nn_['vp'].append(vp)
-      print ""
-      sentence_features[tokens[nn]] = nn_
-      '''
+      
+      print "\tNP={}\n\t\t[JJ]={}".format(nn_compound, (amod_jjs, cop_jjs))
     sentence_info = (tokens, sentence_features)
     results.append(sentence_info)
   reviews_processed.append((review_json, results))
