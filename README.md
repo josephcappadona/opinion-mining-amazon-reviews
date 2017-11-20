@@ -41,11 +41,14 @@ We are building a webapp that aggregates Amazon review opinions about a productâ
     print review_info["reviewerID"]
     print review_info["overall"]
     print review_info["review_text"]
-    for sentence_tokens, sentence_features in sentences:
+    
+    for sentence_tokens, sentence_features in sentences: 
       print "\t{}".format(sentence_tokens)
+      
       for nn_compound, amod_jjs, cop_jjs in sentence_features:
         print "\t\t{}".format(nn_compound)
         print "\t\t\t{}".format(','.join(amod_jjs))
         print "\t\t\t{}".format(','.join(cop_jjs)
+
     print "\n"
   ```
