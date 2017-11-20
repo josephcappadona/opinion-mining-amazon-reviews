@@ -34,6 +34,7 @@ We are building a webapp that aggregates Amazon review opinions about a productâ
 3. Follow stdout with `tail -f ../output/dispatch_corenlp.out`, stderr with `tail -f ../output/dispatch_corenlp.err`
 4. Once complete, find output in pickle format in `../results/` labeled with timestamp (YYYY-MM-DD\_HH-MM-SS)
   * `parsed_reviews = pickle.load(open("../results/output.pickle"))`
-  * `review_info, review_features = parsed_reviews[0]`
-  * `noun, adjs = review_features[0]`
+  * `review_info, sentences = parsed_reviews[0]`
   * `review_info = {"asin": , "reviewerID": , "overall": , "reviewText", ...}`
+  * `sentence_tokens, sentence_features = sentences[0]`
+  * `nn_compound, amods, cops = sentence_features[0]`

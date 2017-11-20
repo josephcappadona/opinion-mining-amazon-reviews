@@ -66,6 +66,7 @@ for review in reviews:
     # also, for better intuition, play around with http://nlp.stanford.edu:8080/corenlp/process
     #    try sentences like "the sound quality is very poor and is not worth the price"
     nn_amods = defaultdict(list) # maps NN index to list of its children with amod dependency
+    nn_compound_map = {}
     nn_np_map = defaultdict(list) # maps NN index to list of NP trees containing it
     nn_jj_map = defaultdict(list) # maps NN index to list of NP trees containing it
     nn_vp_map = defaultdict(list) # maps NN index to VP trees modifying it
@@ -94,6 +95,9 @@ for review in reviews:
             if cur_node.label() == "NP":
               nn_np_map[index].append(cur_node)
             cur_node = cur_node.parent()
+        if "compound" in deps[index]:
+          nn_compound_indexes = sorted(deps[index]["compound"].union([index]))
+          nn_compound_map[index] = ' '.join([tokens[i] for i in nn_compound_indexes])
         
       if pos_tag[:2] == "JJ" or pos_tag[:2] == "NN":
         if "nsubj" in deps[index] and "cop" in deps[index]:
@@ -146,7 +150,10 @@ for review in reviews:
       nn_ = defaultdict(list)
       
       ''' Abbreviated output, just NN->[JJ] map '''
-      sentence_features.append((tokens[nn], [tokens[jj] for jj in nn_amods[nn] + nn_jj_map[nn]]))
+      nn_compound = nn_compound_map[nn] if nn in nn_compound_map else tokens[nn]
+      amod_jjs = [tokens[jj] for jj in nn_amods[nn]]
+      cop_jjs = [tokens[jj] for jj in nn_jj_map[nn]]
+      sentence_features.append((nn_compound, amod_jjs, cop_jjs))
       print "\tNP={}\n\t\t[JJ]={}".format(tokens[nn], sentence_features)
 
 
@@ -182,7 +189,8 @@ for review in reviews:
       print ""
       sentence_features[tokens[nn]] = nn_
       '''
-    results.extend(sentence_features)
+    sentence_info = (tokens, sentence_features)
+    results.append(sentence_info)
   reviews_processed.append((review_json, results))
 review_file.close()
 
