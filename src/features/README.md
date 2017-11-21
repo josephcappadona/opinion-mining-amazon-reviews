@@ -1,6 +1,6 @@
 For extended instructions, see [NLPGrid Usage Guide](https://docs.google.com/document/d/1xQ9RRSatez7NBTDc-bxbrNKnnvB-fZbB292e90L_ZJY/edit)
 
-#Setup
+# Setup
 
 `ssh pennkey@nlpgrid.seas.upenn.edu`
 
@@ -13,24 +13,18 @@ For extended instructions, see [NLPGrid Usage Guide](https://docs.google.com/doc
 `mkdir ../../../virtualenv/`
 
 
-#Creating dispatch files
-To create a batch of jobs, use the `make_corenlp_dispatch.py` script.
+# Creating dispatch files
+To create dispatch scripts, use the `make_corenlp_dispatch.py`:
   
   Usage: `python make_corenlp_dispatch.py template_file.py data_file.json job_results_dir interval num_jobs script_output_dir [skip]`
 
-`template_file.py` = job dispatch template file
-
-`data_file.json` = path to data file to process
-
-`job_results_dir` = path to results of processing
-
-`interval` = num of data points to be processed per job
-
-`num_jobs` = num of jobs (total data points = interval * num\_jobs)
-
-`output_dir` = dispatch script output directory
-
-`skip` (optional) = num of data points to skip (if not starting from beginning of data file)
+    `template_file.py` = job dispatch template file
+    `data_file.json` = path to data file to process
+    `job_results_dir` = path to results of processing
+    `interval` = num of data points to be processed per job
+    `num_jobs` = num of jobs (total data points = interval * num\_jobs)
+    `output_dir` = dispatch script output directory
+    `skip` (optional) = num of data points to skip (if not starting from beginning of data file)
 
 
 `make_corenlp_dispatch.py` works by inserting job parameters into the template file. `{0}`, `{1}`, `{2}` in `corenlp_dispatch_template.py` correspond to the parameters: job number, interval, and skip (same definition as above), respectively.
