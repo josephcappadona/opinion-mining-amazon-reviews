@@ -28,7 +28,7 @@ START_AFTER = int(sys.argv[4]) if len(sys.argv) >= 5 else 0
 
 from stanford_corenlp_pywrapper import CoreNLP
 # for CoreNLP wrapper API, see https://github.com/brendano/stanford_corenlp_pywrapper
-proc = CoreNLP("parse", corenlp_jars=["../CoreNLP/*"])
+proc = CoreNLP("parse", corenlp_jars=["../../../CoreNLP/*"])
 
 review_file = open(filepath, 'r')
 
