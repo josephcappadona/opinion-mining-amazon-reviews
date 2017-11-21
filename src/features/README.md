@@ -39,7 +39,7 @@ This will make 20 dispatch files in the directory `./corenlp` named `dispatch_0.
 # Launching jobs
 `for i in {0..9}; do qsub ./corenlp/dispatch_$i.sh; done`
 
-I would recommend launching them in small batches (<10) at a time so they don't get delegated to the same grid node. Not sure why this is necessary, but it helps. I'm not sure the job parameters are optimized, but feel free to change the parameters `-o`, `-e`, `-l h_rt`, `-l mem`, `-M`, `-m` within `corenlp_dispatch_template.py`. See NLPGrid Usage Guide above for details on parameters.
+I would recommend launching them in small batches (<10) at a time so they don't get delegated to the same grid node. Not sure why this is necessary, but it helps. I'm not sure the job parameters are optimized, feel free to play with the `-l mem` parameter within `corenlp_dispatch_template.py`. You'll also want to modify the parameters `-o`, `-e`, `-l h_rt`, `-M`, `-m` to suit your needs. See NLPGrid Usage Guide above for full details.
 
 To monitor jobs,
     `qstat | grep pennkey`
@@ -55,6 +55,7 @@ ls ../../../results
 ls ../../../data
 rm ../../../output/*
 
+mkdir ./corenlp
 python make_corenlp_dispatch.py corenlp_dispatch_template.sh ../../../data/reviews_Cell_Phones_and_Accessories_5.json ../../../results/ 500 20 ./corenlp 0
 
 for i in {0..9}; do qsub ./corenlp/dispatch_$i.sh; done
