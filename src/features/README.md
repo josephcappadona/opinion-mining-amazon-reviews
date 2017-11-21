@@ -16,9 +16,9 @@ For extended instructions, see [NLPGrid Usage Guide](https://docs.google.com/doc
 # Creating dispatch files
 To create dispatch scripts, use the `make_corenlp_dispatch.py`:
   
-  Usage: `python make_corenlp_dispatch.py template_file.py data_file.json job_results_dir interval num_jobs script_output_dir [skip]`
+  Usage: `python make_corenlp_dispatch.py template_file.sh data_file.json job_results_dir interval num_jobs script_output_dir [skip]`
 
-    `template_file.py` = job dispatch template file
+    `template_file.sh` = job dispatch template file
     `data_file.json` = path to data file to process
     `job_results_dir` = path to results of processing
     `interval` = num of data points to be processed per job
