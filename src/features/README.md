@@ -27,7 +27,7 @@ To create dispatch scripts, use the `make_corenlp_dispatch.py`:
     `skip` (optional) = num of data points to skip (if not starting from beginning of data file)
 
 
-`make_corenlp_dispatch.py` works by inserting job parameters into the template file. `{0}`, `{1}`, `{2}` in `corenlp_dispatch_template.py` correspond to the parameters: job number, interval, and skip (same definition as above), respectively.
+`make_corenlp_dispatch.py` works by inserting job parameters into the template file.
 
 For example,
 
@@ -36,7 +36,7 @@ For example,
 This will make 20 dispatch files in the directory `./corenlp` named `dispatch_0.sh` through `dispatch_19.sh`, the first processing data points [0,499], the second [500,999], the third, [1000,1499], etc, for a total of 10000 data points.
 
 
-#Launching jobs
+# Launching jobs
 `for i in {0..9}; do qsub ./corenlp/dispatch_$i.sh; done`
 
 I would recommend launching them in small batches (<10) at a time so they don't get delegated to the same grid node. Not sure why this is necessary, but it helps. I'm not sure the job parameters are optimized, but feel free to change the parameters `-o`, `-e`, `-l h_rt`, `-l mem`, `-M`, `-m` within `corenlp_dispatch_template.py`. See NLPGrid Usage Guide above for details on parameters.
