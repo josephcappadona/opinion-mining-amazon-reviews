@@ -22,6 +22,8 @@ echo "Start - "
 
 source ../../../virtualenv/bin/activate
 
+java -mx4g -cp "../../../CoreNLP/*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 9000 -timeout 15000
+echo "Started CoreNLP server"
 python corenlp_sandbox.py {1} {2} {3} {4}
 
 echo "Finish - "
