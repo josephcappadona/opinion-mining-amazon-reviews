@@ -12,6 +12,8 @@ For extended instructions, see [NLPGrid Usage Guide](https://docs.google.com/doc
 
 `mkdir ../../../virtualenv/`
 
+`mkdir ../../../CoreNLP/`
+
 
 # Creating dispatch files
 To create dispatch scripts, use the `make_corenlp_dispatch.py`:
