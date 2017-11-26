@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#$ -o ./output/dispatch_corenlp_sandbox_{0}.out
-#$ -e ./output/dispatch_corenlp_sandbox_{0}.err
+#$ -o ./output/server_dispatch.out
+#$ -e ./output/server_dispatch.err
 #$ -l h_rt=01:00:00
 #$ -l mem=16G
 #$ -S /bin/bash
@@ -22,13 +22,6 @@ echo "Start - "
 
 source ../../../virtualenv/bin/activate
 
-#(
-#java -mx4g -cp "../../../CoreNLP/*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 9000 -timeout 15000
-#)&
-#echo "Started CoreNLP server"
-python corenlp_sandbox.py {1} {2} {3} {4}
+java -mx4g -cp "../../../CoreNLP/*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 9000 -timeout 15000
 
-echo "Finish - "
-/bin/date
-
-echo $1
+echo "Started CoreNLP server"
