@@ -6,3 +6,4 @@ src/features/corenlp/dispatch*
 src/features/*.txt
 src/features/output
 src/features/results
+src/*.pkl

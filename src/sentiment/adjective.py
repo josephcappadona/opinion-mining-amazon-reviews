@@ -9,14 +9,17 @@
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 analyzer = SentimentIntensityAnalyzer()
-
+cache = {}
 
 def get_score(adjective):
     """Returns a compound score [-1, 1] representing how negative/positive the
     adjective is.
 
     """
-    return analyzer.polarity_scores(adjective)['compound']
+    if adjective in cache:
+        return cache[adjective]
+
+    return analyzer.polarity_scores(adjective).get('compound', 0)
 
 
 adjectives = [
@@ -33,13 +36,15 @@ adjectives = [
     'flimsy',
 ]
 
-for adjective in adjectives:
-    print(
-        'Adjective: ',
-        adjective,
-        'Sentiment:',
-        get_sentiment_score(adjective)
-    )
+
+if __name__ == '__main__':    
+    for adjective in adjectives:
+        print(
+            'Adjective: ',
+            adjective,
+            'Sentiment:',
+            get_score(adjective)
+        )
 
 """
 Output:

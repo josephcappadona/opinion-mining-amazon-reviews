@@ -11,7 +11,10 @@ import csv
 import re
 import time
 
-FILEPATH = '../../lib/liwc_2015.csv'
+# FILEPATH = '../../lib/liwc_2015.csv'
+
+FILEPATH = '../lib/liwc_2015.csv'
+
 
 POSITIVE = 'POSEMO'
 NEGATIVE = 'NEGEMO'
@@ -34,7 +37,7 @@ def _build_liwc_dictionary():
         for prefix, category in reader:
             _store_regex(prefix, category, CATEGORY_OF_REGEX, CATEGORY_OF_WORD)
 
-    print 'Finished in %s seconds' % (time.time() - start)
+    print('Finished in %s seconds' % (time.time() - start))
     return (CATEGORY_OF_REGEX, CATEGORY_OF_WORD)
 
 
