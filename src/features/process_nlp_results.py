@@ -24,7 +24,7 @@ for fp in filepaths:
       product_features_dict_imt[asin][1] += 1
       feature_dict = product_features_dict_imt[asin][0]
       for phrase, modifier in review_dict.iteritems():
-        feature_dict[phrase].append(modifier)
+        feature_dict[phrase].append(modifier[0])
 
 print "Taking top and sorting"
 for asin, (feature_dict, count) in product_features_dict_imt.iteritems():

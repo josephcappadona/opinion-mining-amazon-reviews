@@ -56,10 +56,13 @@ def parse_review(text):
 
 for review in reviews:
   review_json = json.loads(review)
-  reviews_processed.append((review_json['asin'], parse_review(review_json['reviewText'])))
+  try:
+    phrase_modifier_dict = parse_review(review_json['reviewText'])
+  except ValueError:
+    sys.stderr.write("Failed to parse review with text: " + review_json['reviewText'])
+    phrase_modifier_dict = {}
+  reviews_processed.append((review_json['asin'], phrase_modifier_dict))
   print "\n\n{} {}\n------------------".format(review_json['reviewerID'], review_json['asin'])
-  print(parse)
-  reviews_processed.append(parse)
 
 review_file.close()
 sys.stderr.write("Finished parsing\n")

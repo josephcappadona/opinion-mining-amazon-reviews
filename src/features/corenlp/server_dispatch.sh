@@ -2,7 +2,7 @@
 
 #$ -o ./output/server_dispatch.out
 #$ -e ./output/server_dispatch.err
-#$ -l h_rt=01:00:00
+#$ -l h_rt=00:20:00
 #$ -l mem=16G
 #$ -S /bin/bash
 #$ -cwd
