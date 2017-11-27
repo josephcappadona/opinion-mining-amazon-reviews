@@ -1,8 +1,6 @@
-"""Detect sentiment for adjectives."""
+"""Detect sentiment for adjectives.
 
-"""
-1st approach: CoreNLP
-Tried it -- doesn't seem to provide sentiment polarity.
+1st approach: CoreNLP doesn't seem to provide sentiment polarity.
 
 2nd approach: VADER
 
@@ -13,7 +11,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 analyzer = SentimentIntensityAnalyzer()
 
 
-def get_sentiment_score(adjective):
+def get_score(adjective):
     """Returns a compound score [-1, 1] representing how negative/positive the
     adjective is.
 
