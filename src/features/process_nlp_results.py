@@ -5,7 +5,7 @@ import sys
 # Run within src/features directory
 # Produces pickle with product asin -> ([(nn, [adjs])], # reviews)
 if len(sys.argv) < 1:
-  print("Specify filepath of the *file with a list of filenames* corresponding to output of corenlp_sandbox jobs.")
+  print("Specify filepath of the *file with a list of filenames in results directory* corresponding to output of corenlp_sandbox jobs.")
   exit()
 
 THRESHOLD = 0.02 # % of all reviews that must mention this feature
@@ -17,7 +17,7 @@ with open(sys.argv[1], 'rb') as file:
   filepaths = [x.strip() for x in filepaths] 
 
 for fp in filepaths:
-  with open(fp, 'rb') as file:
+  with open("./results/" + fp, 'rb') as file:
     print "Processing {}".format(fp)
     reviews = pickle.load(file) 
     for asin, review_dict in reviews:

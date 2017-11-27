@@ -58,6 +58,8 @@ for review in reviews:
   review_json = json.loads(review)
   reviews_processed.append((review_json['asin'], parse_review(review_json['reviewText'])))
   print "\n\n{} {}\n------------------".format(review_json['reviewerID'], review_json['asin'])
+  print(parse)
+  reviews_processed.append(parse)
 
 review_file.close()
 sys.stderr.write("Finished parsing\n")

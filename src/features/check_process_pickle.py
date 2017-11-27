@@ -6,12 +6,14 @@ if len(sys.argv) < 1:
   print("Specify pickle filepath.")
   exit()
 
-def dd():
-  return [defaultdict(list), 0]
+total_count = 0
 
 with open(sys.argv[1], 'rb') as file:
-  reviews = pickle.load(file)
-  for asin, (feature_modifier_list, count) in reviews.iteritems():
+  products = pickle.load(file)
+  for asin, (feature_modifier_list, count) in products.iteritems():
+    total_count += count
     print "ASIN: {}, # reviews: {}".format(asin, count) 
     for phrase, adjs in feature_modifier_list:
       print "{} ({}), {}".format(phrase, len(adjs), adjs)
+
+print "# products: {0}, # reviews: {1}".format(len(products), total_count)

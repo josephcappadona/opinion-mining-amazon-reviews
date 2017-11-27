@@ -11,3 +11,5 @@ with open(sys.argv[1], 'rb') as file:
     print "ASIN: {}".format(review_asin) 
     for phrase, modifier in phrase_modifier_dict.items():
       print((phrase, modifier))
+
+print("# reviews processed: {0}".format(len(reviews)))
