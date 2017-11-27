@@ -1,5 +1,8 @@
 *.pyc
 *.ipynb_checkpoints
-src/features/corenlp/*
 venv/*
 venv3/*
+src/features/corenlp/dispatch*
+src/features/*.txt
+src/features/output
+src/features/results
