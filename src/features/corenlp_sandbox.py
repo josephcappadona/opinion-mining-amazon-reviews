@@ -33,6 +33,7 @@ def parse_review(text):
         phrase_dict = defaultdict() # nn -> nn phrase
         modifier_dict = defaultdict() # nn -> adj
         adv_dict = defaultdict() # nn -> adv + adj
+        negated_adjs = set()
         for (gov, gov_pos), dependency, (dep, dep_pos) in sentence.triples():
             if not gov.isalpha() or not dep.isalpha():
                 continue
@@ -44,13 +45,17 @@ def parse_review(text):
                 modifier_dict[gov] = dep
             elif dependency == 'compound':
                 phrase_dict[gov] = dep + ' ' + gov
-            elif dependency == 'advmod':
-                adv_dict[gov] = dep + ' ' + gov
+            elif dependency == 'neg':
+                negated_adjs.add(gov) 
+            #elif dependency == 'advmod':
+                #adv_dict[gov] = dep + ' ' + gov
         for noun, adj in modifier_dict.items():
             if noun in phrase_dict:
                 noun = phrase_dict[noun]
-            if adj in adv_dict:
-                adj = adv_dict[adj]
+            if adj in negated_adjs:
+                adj = "*" + adj
+            #if adj in adv_dict:
+                #adj = adv_dict[adj]
             phrase_modifier_dict[noun].append(adj)
     return phrase_modifier_dict
 
