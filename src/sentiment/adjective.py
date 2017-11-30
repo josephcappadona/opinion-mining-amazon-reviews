@@ -19,7 +19,9 @@ def get_score(adjective):
     if adjective in cache:
         return cache[adjective]
 
-    return analyzer.polarity_scores(adjective).get('compound', 0)
+    result = analyzer.polarity_scores(adjective).get('compound', 0)
+    cache[adjective] = result
+    return adjective
 
 
 adjectives = [

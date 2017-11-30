@@ -1,8 +1,7 @@
 import math
 import statistics
-import sentiment
 
-from . import liwc
+# from . import liwc
 from . import adjective
 
 
@@ -44,7 +43,7 @@ def get_weighted_sentiment(product_feature_adjs):
     feature_scores = []
     for product_quality, adj_data in feat_adjs:
         for adjectives, (num_helpful, num_total), review_score in adj_data:
-            scores = [sentiment.adjective.get_score(
+            scores = [adjective.get_score(
                 adjective) for adjective in adjectives]
             score = statistics.mean(scores)
             # TODO: log weird ones that differ from review score, or have
@@ -53,9 +52,9 @@ def get_weighted_sentiment(product_feature_adjs):
             wc[weight] += 1
             total_num += score * weight
             total_denom += weight
-        final_score = float(total_num) / total_denom
+        final_score = len(adj_data) * float(total_num) / total_denom
         feature_scores.append((product_quality, final_score))
 
-    print(wc) # Distribution of weights
+    print(wc)  # Distribution of weights
 
     return sorted(feature_scores, key=lambda item: item[1], reverse=True)
