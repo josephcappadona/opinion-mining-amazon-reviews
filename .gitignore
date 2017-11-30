@@ -7,5 +7,5 @@ src/features/*.txt
 src/features/output
 src/features/results
 src/*.pkl
-samples/reviews_of_bad_products.pickle
+samples/reviews_of_bad_products_asins.pickle
 *.pickle
