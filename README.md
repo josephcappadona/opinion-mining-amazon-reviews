@@ -15,11 +15,18 @@ We are building a webapp that aggregates Amazon review opinions about a productâ
 3. Create a webapp that online shoppers can use to obtain product insights drawn from our models.
 
 # Documents and Presentations
+
+Fall 2017
+
 [Prospectus](https://docs.google.com/document/d/1361A_TWmM_9vMqyUZn54dAXiFLXCjP1nHvMBFuujl08/)
 
 [Proposal Review Presentation, 10/12](https://docs.google.com/presentation/d/1Mk74AG5LYhIhdV7RcbA-OsCsA1ILOk9LSzZt8JfhTtg/)
 
 [Lightning Talk, 10/19](https://docs.google.com/document/d/1VA6_tRsiSYoE_d5CvkZ4U52NRldFUp5Mq_QTt4HwOsw/)
+
+[Final Presentation Slides](https://docs.google.com/presentation/d/1vm-XQ_tDgMJWDHU-XI9NiN6TQwyiPJ08fJOVJXBRm5I/edit#slide=id.g2a04ea796c_0_89)
+
+[Final Report](https://docs.google.com/document/d/1h9boZWqye2Pv_eZbb1lL7HMplCbGHL_ewKFdSpNEhqM/)
 
 # Local Directory Setup
 1. Create dir `../data/` and place review data within
