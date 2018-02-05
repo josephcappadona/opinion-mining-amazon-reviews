@@ -1,0 +1,13 @@
+vaderSentiment/__init__.py,sha256=G2WICU_Zh5n_nB23EBynr3180BMfu-UHO-IerOnJgRg,17
+vaderSentiment/vaderSentiment.py,sha256=oxmp7wgvhAGrvTXGC8e-h6VcIIteq09fBur_QOAN8W8,29525
+vaderSentiment/vader_lexicon.txt,sha256=m8Zu6hUeXusOxCirD_F6odLorBXHznMXi-o8Ox00bi8,434147
+vaderSentiment-2.5.dist-info/DESCRIPTION.rst,sha256=4vtgzUayv2Nj9FEnY-9b6z3Yix7PyXW67K8ssaGnDkA,39
+vaderSentiment-2.5.dist-info/LICENSE.txt,sha256=aHl9hGGGtByX1YVL1t1QW4CCnsP_yu3z8Y4w5Ate-fc,1097
+vaderSentiment-2.5.dist-info/METADATA,sha256=tDBribpg5AizCQHXz3fiOyC1W4_asmSdmrZ4Gnaam1Q,590
+vaderSentiment-2.5.dist-info/RECORD,,
+vaderSentiment-2.5.dist-info/WHEEL,sha256=9Z5Xm-eel1bTS7e6ogYiKz0zmPEqDwIypurdHN1hR40,116
+vaderSentiment-2.5.dist-info/metadata.json,sha256=w8aJGYxS8Cx6sqjo6HGumhF30UVTzrZnDCVBYoMfVmY,786
+vaderSentiment-2.5.dist-info/top_level.txt,sha256=OPVYyArRoCmSjC3Dc9StRy7LbBqZNl6i5P9zZqAfEP4,15
+vaderSentiment-2.5.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+vaderSentiment/vaderSentiment.pyc,,
+vaderSentiment/__init__.pyc,,
