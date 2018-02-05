@@ -7,5 +7,5 @@ from amazonapp.models import *
 admin.site.register(Product)
 admin.site.register(Category)
 admin.site.register(ProductQuality)
-admin.site.register(ProductQualityScoreData)
+admin.site.register(ProductQualityScore)
 admin.site.register(ProductQualitySnippet)
