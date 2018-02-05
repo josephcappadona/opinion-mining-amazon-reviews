@@ -14,3 +14,5 @@ webapp/djangovenv/bin/*
 webapp/djangovenv/lib/*
 webapp/djangovenv/src/*
 *.pickle
+*.sqlite3
+webapp/amazonproj/db.sqlite3

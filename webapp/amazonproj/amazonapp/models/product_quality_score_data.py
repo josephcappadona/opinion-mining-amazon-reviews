@@ -1,5 +1,5 @@
 from django.db import models
-from . import Product, Category
+from . import Product, Category, ProductQuality
 
 
 class ProductQualityScoreData(models.Model):
