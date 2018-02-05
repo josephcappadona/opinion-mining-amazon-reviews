@@ -1,11 +1,16 @@
 *.pyc
 *.ipynb_checkpoints
-venv/*
-venv3/*
-src/features/corenlp/dispatch*
-src/features/*.txt
-src/features/output
-src/features/results
-src/*.pkl
-samples/reviews_of_bad_products_asins.pickle
+nlp/venv/*
+nlp/venv3/*
+nlp/src/features/corenlp/dispatch*
+nlp/src/features/*.txt
+nlp/src/features/output
+nlp/src/features/results
+nlp/src/*.pkl
+nlp/samples/reviews_of_bad_products_asins.pickle
+
+# webapp
+webapp/djangovenv/bin/*
+webapp/djangovenv/lib/*
+webapp/djangovenv/src/*
 *.pickle
