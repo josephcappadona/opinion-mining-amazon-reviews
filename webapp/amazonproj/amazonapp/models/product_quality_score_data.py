@@ -1,8 +1,8 @@
 from django.db import models
-from . import Product, Category
+from . import Product, Category, ProductQuality
 
 
-class ProductQualityScore(models.Model):
+class ProductQualityScoreData(models.Model):
     # id of the Amazon product (ASIN)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     product_quality = models.ForeignKey(ProductQuality, on_delete=models.CASCADE)
@@ -10,7 +10,7 @@ class ProductQualityScore(models.Model):
     # pq_scores: JSON mapping “{ pq_id1: 0.7, pq_id2: 0.4, … }”
     pq_scores = models.TextField()
 
-    def product_qualities(self):
+    def get_data(self):
         """
         Returns dict of mapping from product quality to score
         """
