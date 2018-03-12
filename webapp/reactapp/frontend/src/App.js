@@ -13,7 +13,7 @@ class App extends Component {
       <div>
         <Navbar>
           <NavbarGroup>
-            <NavbarHeading>Review Aggregator</NavbarHeading>
+            <NavbarHeading>Amazon Review Aggregator</NavbarHeading>
           </NavbarGroup>
           <NavbarGroup>
             <Button className="pt-minimal" iconName="home"></Button>
