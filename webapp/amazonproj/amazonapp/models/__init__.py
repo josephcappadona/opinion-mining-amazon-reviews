@@ -6,5 +6,5 @@ from .product import *
 from .review import *
 
 from .product_quality import *
-from .product_quality_score_data import *
+from .product_quality_score import *
 from .product_quality_snippet import *

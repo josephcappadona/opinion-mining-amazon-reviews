@@ -11,33 +11,6 @@ import { Card, Elevation } from "@blueprintjs/core";
 
 
 class App extends Component {
-
-  constructor(props) {
-    super(props)
-    this.state = {products: [{'id': -1}]}
-    const url = 'http://127.0.0.1:8000/products/'
-    // curl -H 'Accept: application/json; indent=4' -u admin:password123 
-    axios.get(url, {
-      auth: {username: 'admin', password: 'password123'},
-    })
-    .then(res => {
-        const products = res.data;
-        this.setState({ products });
-    })
-
-    this.renderProducts = this.renderProducts.bind(this)
-  }
-
-  renderProducts() {
-    return this.state.products.map((product, index) => {
-      <Card interactive={true} elevation={Elevation.TWO}>
-        <h5><a href="#">{product.title}</a></h5>
-        <p>1,169 customer reviews | 4.0/5 stars</p>
-        <Button>Read More</Button>
-      </Card>
-    })
-  }
-
   render() {
     return (
       <div>
@@ -50,7 +23,7 @@ class App extends Component {
             
             <div className="pt-input-group .modifier">
               <span className="pt-icon pt-icon-search"></span>
-              <input className="pt-input" modifier type="search" placeholder="Search for a product..." dir="auto" />
+              <input className="pt-input" type="search" placeholder="Search for a product..." dir="auto" />
             </div>
             <NavbarDivider />
             <Button className="pt-minimal" iconName="user"></Button>
@@ -59,23 +32,65 @@ class App extends Component {
           </NavbarGroup>
         </Navbar>
 
-        <Card interactive={true} elevation={Elevation.TWO}>
-          <h5><a href="#">{this.state.products[0].title}</a></h5>
-          <p>1,169 customer reviews | 4.0/5 stars</p>
-          <Button>Read More</Button>
-        </Card>
-
-        {this.state.products.map(product => {
-          <Card interactive={true} elevation={Elevation.TWO}>
-            <h5><a href="#">{product.title}</a></h5>
-            <p>1,169 customer reviews | 4.0/5 stars</p>
-            <Button>Read More</Button>
-          </Card>
-        })}
+        <ProductCardList/>
       </div>
     );
   }
 
 }
+
+class ProductCardList extends React.Component {
+  constructor(props) {
+    super(props)
+    // set initial state
+    this.state = {
+      products: []
+    }
+  }
+
+  componentDidMount() {
+    const url = 'http://127.0.0.1:8000/products/'
+    axios.get(url, {
+      auth: {username: 'admin', password: 'password123'},
+    })
+    .then(res => {
+      const products = res.data;
+      this.setState({ products });
+    })
+    console.log('got data from api', this.state)
+  }
+
+  render() {
+    const numProducts = this.state.products.length;
+    const averageStarRating = this.state.products.reduce((sum, x) => sum + x, 0) / numProducts || null
+    const starRatingStr = `| ${averageStarRating}/5 stars`
+    const products = this.state.products.map((product) => {
+      return <Card interactive={true} elevation={Elevation.TWO} key={product.id}>
+        <h5><a href="#">{product.title}</a></h5>
+        <p>{product.review_set.length} customer reviews{averageStarRating && starRatingStr}</p>
+        <ProductQualityScores qualityScores={product.productqualityscore_set}/>
+        <Button>Read More</Button>
+      </Card>
+    })
+
+    return (
+      <div className='product-list'>
+        {products}
+      </div>
+    )
+  }
+}
+
+function ProductQualityScores(props) {
+  const qualityScores = props.qualityScores.map((quality_score) => {
+    return <p>{quality_score.product_quality.name}: {quality_score.score}</p>
+  })
+  return (
+    <div>
+      {qualityScores}
+    </div>
+  )
+}
+
 
 export default App;
