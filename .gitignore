@@ -10,9 +10,6 @@ nlp/src/*.pkl
 nlp/samples/reviews_of_bad_products_asins.pickle
 
 # webapp
-webapp/djangovenv/bin/*
-webapp/djangovenv/lib/*
-webapp/djangovenv/src/*
 *.pickle
 *.sqlite3
 webapp/amazonproj/db.sqlite3

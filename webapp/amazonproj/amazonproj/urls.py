@@ -16,8 +16,22 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 
-app_name="amazonapp"
+app_name = "amazonapp"
+
+# Add router for AP
+from rest_framework import routers
+from amazonapp import views
+
+router = routers.DefaultRouter()
+router.register(r'products', views.ProductViewSet)
+
 
 urlpatterns = [
+    # Wire up our API using automatic URL routing.
+    # Additionally, we include login URLs for the browsable API.
+    url(r'^', include(router.urls)),
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+
+    # Admin UI
     url(r'^admin/', admin.site.urls),
 ]
