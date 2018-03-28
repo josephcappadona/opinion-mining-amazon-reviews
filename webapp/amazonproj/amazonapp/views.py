@@ -19,7 +19,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def list(self, request):
         # filter out those that dont match the search query
-        query = request.GET['q']
+        query = request.GET.get('q')
         if query:
             filtered_products = Product.objects.all().filter(
                 title__startswith=query

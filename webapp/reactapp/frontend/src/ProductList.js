@@ -13,9 +13,14 @@ import { Card, Elevation } from "@blueprintjs/core";
 class ProductList extends Component {
   constructor(props) {
     super(props)
+    let query = ''
+    if (props.location.search) {
+      query = props.location.search.substring(3)
+    }
     // set initial state
     this.state = {
-      products: []
+      products: [],
+      q: query,
     }
   }
 
@@ -23,6 +28,7 @@ class ProductList extends Component {
     const url = 'http://127.0.0.1:8000/products/'
     axios.get(url, {
       auth: {username: 'admin', password: 'password123'},
+      params: {q: this.state.q}
     })
     .then(res => {
       const products = res.data;
