@@ -38,10 +38,3 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ('id', 'title', 'categories', 'review_set', 'productqualityscore_set')
-
-
-
-# class GroupSerializer(serializers.HyperlinkedModelSerializer):
-#     class Meta:
-#         model = Category
-#         fields = ('name', 'name')

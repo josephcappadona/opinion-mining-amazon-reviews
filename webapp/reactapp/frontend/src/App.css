@@ -1,5 +1,8 @@
 .App {
-  text-align: center;
+  /*text-align: center;*/
+  max-width: 1000px;
+  margin: auto !important;
+  float: none !important;
 }
 
 .App-logo {
@@ -21,4 +24,12 @@
 @keyframes App-logo-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+.navbarSettings {
+  float: right !important;
+}
+
+.compare {
+  justify-content: space-between;
 }
