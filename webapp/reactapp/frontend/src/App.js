@@ -30,8 +30,11 @@ const SiteNavbar = () => (
         </Link>
 
         <div className="pt-input-group .modifier">
-          <span className="pt-icon pt-icon-search"></span>
-          <input className="pt-input" type="search" placeholder="Search for a product..." dir="auto" />
+          <span className="pt-icon pt-icon-search"></span> 
+          <form method = "GET" action = "/search">
+            <input name = "q" className="pt-input" type="search" placeholder="Search for a product..." dir="auto" />
+            <button type="submit" class="pt-button pt-icon-add .modifier">Button</button>
+          </form>
         </div>
         <NavbarDivider />
         <Button className="pt-minimal" iconName="user"></Button>
