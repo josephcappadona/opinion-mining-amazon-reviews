@@ -8,7 +8,8 @@ import _ from 'lodash'
 import './Comparison.css'
 
 // Components
-import { Alignment, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, Button, Search } from "@blueprintjs/core"
+import { Alignment, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, Button, Search,
+  Intent, Popover, PopoverInteractionKind, Position } from "@blueprintjs/core"
 
 import { Card, Elevation } from "@blueprintjs/core"
 
@@ -121,17 +122,35 @@ const ProductQualityRow = props => {
       <td>{props.name}</td>
       {
         props.productScores.map((score, index) => {
-          if (score >= 60) {
-            return <td className='compare-table-score' key={index}><span className="pt-tag pt-large pt-intent-success">{score}</span></td>
-          } else if (score >= 40) {
-            return <td className='compare-table-score' key={index}><span class="pt-tag pt-large pt-intent-warning">{score}</span></td>
-          } else {
-            return <td className='compare-table-score' key={index}><span class="pt-tag pt-large pt-intent-danger">{score}</span></td>
-          }
-          // (<td key={index} style={{color: getGreenToRed(score)}}>{score}</td>))
+          return (
+            <td className='compare-table-score' key={props.index}>
+              <ScorePopover key={index} index={index} score={score}/>
+            </td>
+          )
         })
       }
     </tr>
+  )
+}
+
+const ScorePopover = props => {
+  let tagClassName = 'pt-tag pt-large pt-intent-failure'
+  if (props.score >= 60) {
+    tagClassName = 'pt-tag pt-large pt-intent-success'
+  } else if (props.score >= 40) {
+    tagClassName = 'pt-tag pt-large pt-intent-warning'
+  }
+
+  const snippets = ["Hi i'm a quote", "Hi i'm a quote 2"]
+  return (
+    <Popover interactionKind={PopoverInteractionKind.CLICK} popoverClassName="pt-popover-content-sizing" position={Position.RIGHT}>
+      <span className={tagClassName}>{props.score}</span>
+      <div>
+          <h5>Popover title</h5>
+          <p>...</p>
+          <Button className="pt-popover-dismiss">Dismiss</Button>
+      </div>
+    </Popover>
   )
 }
 
