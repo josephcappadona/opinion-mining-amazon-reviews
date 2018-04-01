@@ -1,5 +1,7 @@
 .compare-table {
     min-width: 1000px;
+    width: 300px;
+    table-layout: fixed;
 }
 
 .compare-table-header {
