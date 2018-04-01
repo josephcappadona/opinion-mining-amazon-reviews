@@ -42,7 +42,7 @@ class Comparison extends Component {
     const productIdToPQs = this.state.products.reduce((acc, product) => {
       acc[product.id] = {}
       for (var pq of product.productqualityscore_set) {
-        acc[product.id][pq.product_quality.name] = pq.score
+        acc[product.id][pq.product_quality.name] = pq.score * 100
       }
       return acc
     }, {})
@@ -98,6 +98,7 @@ const ProductQualityHeader = props => {
   </thead>
 }
 
+
 const ProductQualityRow = props => {
   // name: name of pq
   // productScores: [score]
@@ -105,10 +106,16 @@ const ProductQualityRow = props => {
     <tr>
       <td>{props.name}</td>
       {
-        props.productScores.map((score, index) => (<td key={index}>{score}</td>))
+        props.productScores.map((score, index) => (<td key={index} style={{color: getGreenToRed(score)}}>{score}</td>))
       }
     </tr>
   )
+}
+
+function getGreenToRed(percent) {
+  var r = percent<50 ? 255 : Math.floor(255-(percent*2-100)*255/100);
+  var g = percent>50 ? 255 : Math.floor((percent*2)*255/100);
+  return 'rgb('+r+','+g+',0)';
 }
 
 function ProductQualityScores(props) {
