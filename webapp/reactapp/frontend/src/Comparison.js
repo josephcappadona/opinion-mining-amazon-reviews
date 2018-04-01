@@ -42,7 +42,7 @@ class Comparison extends Component {
     const productIdToPQs = this.state.products.reduce((acc, product) => {
       acc[product.id] = {}
       for (var pq of product.productqualityscore_set) {
-        acc[product.id][pq.product_quality.name] = pq.score * 100
+        acc[product.id][pq.product_quality.name] = (pq.score * 100).toFixed(0)
       }
       return acc
     }, {})
@@ -74,11 +74,13 @@ class Comparison extends Component {
     })
 
     const productNames = this.state.products.map((prod) => prod.title)
+    const imageURLs = this.state.products.map((prod) => prod.image_url)
+
     return (
       <div>
         <table className="pt-html-table pt-interactive compare-table">
           <ProductQualityHeader productNames={productNames}/>
-          
+          <ProductQualityImageHeader imageURLs={imageURLs}/>
           <tbody>
             {rowsData.map((row) => <ProductQualityRow name={row.name} productScores={row.productScores}/>)}
           </tbody>
@@ -98,6 +100,18 @@ const ProductQualityHeader = props => {
   </thead>
 }
 
+const ProductQualityImageHeader = props => {
+  return <thead className="compare-table-image-header">
+    <tr>
+      <th/>
+      {props.imageURLs.map((imageURL) => (
+        <td key={imageURL}>
+          <img src={imageURL} alt="" border='3' width='220px'/>
+        </td>
+      ))}
+    </tr>
+  </thead>
+}
 
 const ProductQualityRow = props => {
   // name: name of pq
@@ -106,7 +120,16 @@ const ProductQualityRow = props => {
     <tr>
       <td>{props.name}</td>
       {
-        props.productScores.map((score, index) => (<td key={index} style={{color: getGreenToRed(score)}}>{score}</td>))
+        props.productScores.map((score, index) => {
+          if (score >= 60) {
+            return <td className='compare-table-score' key={index}><span className="pt-tag pt-large pt-intent-success">{score}</span></td>
+          } else if (score >= 40) {
+            return <td className='compare-table-score' key={index}><span class="pt-tag pt-large pt-intent-warning">{score}</span></td>
+          } else {
+            return <td className='compare-table-score' key={index}><span class="pt-tag pt-large pt-intent-danger">{score}</span></td>
+          }
+          // (<td key={index} style={{color: getGreenToRed(score)}}>{score}</td>))
+        })
       }
     </tr>
   )
