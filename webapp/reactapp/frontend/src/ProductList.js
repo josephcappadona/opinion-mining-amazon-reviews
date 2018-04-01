@@ -28,7 +28,7 @@ class ProductList extends Component {
     const url = 'http://127.0.0.1:8000/products/'
     axios.get(url, {
       auth: {username: 'admin', password: 'password123'},
-      params: {q: this.state.q}
+      params: {search: this.state.q}
     })
     .then(res => {
       const products = res.data;

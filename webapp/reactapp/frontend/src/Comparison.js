@@ -23,15 +23,15 @@ class Comparison extends Component {
   }
 
   componentDidMount() {
-    const url = 'http://127.0.0.1:8000/products/'
+    const url = 'http://127.0.0.1:8000/products'
     axios.get(url, {
       auth: {username: 'admin', password: 'password123'},
+      params: {compare: 'B06XCM9LJ4,B006C3YHKI'},
     })
     .then(res => {
       const products = res.data
       this.setState({ products })
     })
-    // console.log('got data from api', this.state)
   }
 
   render() {

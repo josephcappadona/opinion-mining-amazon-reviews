@@ -19,7 +19,7 @@ class SiteNavbar extends Component {
     super(props)
     // set initial state
     this.state = {
-      q: '',
+      search: '',
     }
     this.handleChange = this.handleChange.bind(this)
   }
@@ -32,7 +32,7 @@ class SiteNavbar extends Component {
             <NavbarHeading>Amazon Review Aggregator</NavbarHeading>
           </NavbarGroup>
           <NavbarGroup className="navbarSettings">
-            <Link to="/compare/1/2">
+            <Link to="/compare">
               <Button className="pt-minimal" iconName="comparison"></Button>
             </Link>
 
@@ -43,7 +43,7 @@ class SiteNavbar extends Component {
             <div className="pt-input-group .modifier">
               <span className="pt-icon pt-icon-search"></span> 
               <form method = "GET">
-                <input style={{'padding-left': '30px'}}value={this.state.q} name = "q" className="pt-input" type="search" placeholder="Search" dir="auto" onChange={this.handleChange}/>
+                <input style={{'paddingLeft': '30px'}} value={this.state.search} name = "search" className="pt-input" type="search" placeholder="Search" dir="auto" onChange={this.handleChange}/>
                 <input type="submit" style={{display: 'none'}}/>
               </form>
             </div>
@@ -56,18 +56,18 @@ class SiteNavbar extends Component {
 
         <div>
           <Route exact path="/" component={ProductList}/>
-          <Route path="/compare/:id1/:id2" component={Comparison} />
+          <Route path="/compare" component={Comparison} />
         </div>
       </div>
     )
   }
 
   handleChange(event) {
-    this.setState({q: event.target.value});
+    this.setState({search: event.target.value});
   }
 
   // handleSubmit(event) {
-  //   // alert('A name was submitted: ' + this.state.q);
+  //   // alert('A name was submitted: ' + this.state.search);
 
   //   event.preventDefault();
   // }

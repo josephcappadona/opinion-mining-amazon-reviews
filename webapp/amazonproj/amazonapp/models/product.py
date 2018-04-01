@@ -7,8 +7,8 @@ class Product(models.Model):
     id = models.CharField(max_length=255, primary_key=True)
     title = models.CharField(max_length=1000)
     categories = models.ManyToManyField(Category)
-    price = models.FloatField(null=True, blank=True)
-    image_url = models.CharField(max_length=255, null=True)
+    description = models.TextField(null=True, blank=True)
+    image_url = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return '{}'.format(self.title)

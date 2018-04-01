@@ -41,6 +41,7 @@ INSTALLED_APPS = (
     'amazonapp',
     'rest_framework',
     'corsheaders',
+    'django_extensions',
 )
 
 MIDDLEWARE = (

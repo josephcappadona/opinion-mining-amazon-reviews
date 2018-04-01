@@ -19,10 +19,18 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def list(self, request):
         # filter out those that dont match the search query
-        query = request.GET.get('q')
-        if query:
+        search_query = request.GET.get('search')
+        compare_query = request.GET.get('compare')
+        # import code;code.interact(local=locals())
+        if search_query:
             filtered_products = Product.objects.all().filter(
-                title__startswith=query
+                title__startswith=search_query
+            ).order_by('title')
+        elif compare_query:
+            # compare_query has a list of asins. filter by these asins!
+            asins = compare_query.split(',')
+            filtered_products = Product.objects.all().filter(
+                pk__in=asins
             ).order_by('title')
         else:
             filtered_products = self.get_queryset()
