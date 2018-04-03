@@ -95,25 +95,27 @@ feature_to_class = pickle.load(open(CLASS_PICKLE, "rb"))
 # DOUBLE-PROPAGATION
 # input: parsed_sentence, cumulative information dictionaries (FO_dict, OF_dict, FF_dict, OO_dict, features_count, opinions_count)
 # output: extracted dependency features
-def extract_relevant_dependencies(parsed_sentence, FO_dict, OF_dict, FF_dict, OO_dict, features_count, opinions_count):
+def extract_relevant_dependencies(parsed_sentence, FO_dict, OF_dict, FF_dict, OO_dict, features_count, opinions_count, feature_opinions):
     extracted_sentence = []
     for (gov, gov_pos), dependency, (dep, dep_pos) in parsed_sentence.triples():
         if not gov.isalpha() or not dep.isalpha():
             continue
         gov = gov.lower()
         dep = dep.lower()
-        if dependency == "nsubj" and dep_pos == "NN":
+        if dependency == "nsubj" and dep_pos == "NN" and gov_pos == "JJ" and is_sentiment_bearing(gov):
             OF_dict[gov] = dep
             FO_dict[dep] = gov
             features_count[dep] += 1
             opinions_count[gov] += 1
-        elif dependency == "amod" and gov_pos == "NN":
+            feature_opinions[dep].append(gov)
+        elif dependency == "amod" and gov_pos == "NN" and dep_pos == "JJ" and is_sentiment_bearing(dep):
             OF_dict[dep] = gov
             FO_dict[gov] = dep
             opinions_count[dep] += 1
             features_count[gov] += 1
+            feature_opinions[gov].append(dep)
         elif dependency == "conj":
-            if gov_pos == "JJ" and dep_pos == "JJ":
+            if gov_pos == "JJ" and dep_pos == "JJ" and is_sentiment_bearing(gov) and is_sentiment_bearing(dep):
                 OO_dict[gov].append(dep)
                 OO_dict[dep].append(gov)
                 opinions_count[gov] += 1
@@ -254,6 +256,7 @@ def extract_features_opinions(reviews):
     features_count = defaultdict(int)
     opinions = positive_lexicon.union(negative_lexicon)
     opinions_count = defaultdict(int)
+    feature_opinions = defaultdict(list)
     
     raw_sentences = []
     parsed_sentences = []
@@ -273,7 +276,7 @@ def extract_features_opinions(reviews):
         parses.append(parse)
         for sentence in parse:
             # extract relevant dependency information
-            extracted_sentence = extract_relevant_dependencies(sentence, FO_dict, OF_dict, FF_dict, OO_dict, features_count, opinions_count)
+            extracted_sentence = extract_relevant_dependencies(sentence, FO_dict, OF_dict, FF_dict, OO_dict, features_count, opinions_count, feature_opinions)
             
             review_indices.append(i)
             parsed_sentences.append(extracted_sentence)
@@ -331,7 +334,8 @@ def extract_features_opinions(reviews):
            feature_sentiments_pos,
            feature_sentiments_neg,
            opinion_words_by_review,
-           opinion_sentiments)
+           opinion_sentiments,
+           feature_opinions)
     return res
 
 # DOUBLE-PROP OUTPUTS
@@ -348,14 +352,38 @@ feature_sentiments_cumulative, \
 feature_sentiments_pos, \
 feature_sentiments_neg, \
 opinion_words_by_review, \
-opinion_sentiments = extract_features_opinions(reviews)
+opinion_sentiments, \
+feature_opinions = extract_features_opinions(reviews)
 
 # PRINTS
 print("Feature clusters:")
 sorted_classes = get_sorted_classes(features_count, MIN_THRESHOLD * len(reviews))
 pprint(sorted_classes)
 
-filter_opinions(opinions, opinion_sentiments)
+# Set of features that made it into a cluster
+final_features = set()
+for cluster, count in sorted_classes:
+    for feature in cluster:
+        final_features.add(feature)
+for feature in list(feature_opinions.keys()):
+    if feature not in final_features:
+        del feature_opinions[feature]
+# Set of opinions related to features in a cluster
+final_opinions = set()
+for opinions in feature_opinions.values():
+    for opinion in opinions:
+        final_opinions.add(opinion)
+
+#filter_opinions(opinions, opinion_sentiments)
 lexicon = positive_lexicon.union(negative_lexicon)
 print("Opinion word sentiments (newly discovered):")
-pprint(sorted([(opinion, sentiment) for opinion, sentiment in opinion_sentiments.items() if opinion not in lexicon], key=lambda x:x[1], reverse=False))
+pprint(sorted([(opinion, sentiment) for opinion, sentiment in opinion_sentiments.items()
+               if opinion not in lexicon and opinion in final_opinions], key=lambda x:x[1], reverse=False))
+
+for feature, opinions in feature_opinions.items():
+    for i, opinion in enumerate(opinions):
+        if opinion in opinion_sentiments:
+            opinions[i] = (opinion, opinion_sentiments[opinion])
+        else:
+            print("Error, " + opinion + " missing from sentiment list")
+pprint(feature_opinions)
