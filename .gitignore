@@ -14,3 +14,8 @@ nlp/samples/reviews_of_bad_products_asins.pickle
 *.pickle
 *.sqlite3
 webapp/amazonproj/db.sqlite3
+
+webapp/djangovenv/lib/*
+webapp/djangovenv/bin/*
+
+meta_Electronics.json.gz
