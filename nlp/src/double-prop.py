@@ -533,7 +533,7 @@ with open('{}/{}.json'.format(quality_clusters_table_directory, PRODUCT_ASIN), '
 
 # PRODUCT QUALITY TABLE
 # build table
-product_quality_relationship_table_columns = ['asin', 'quality', 'quality_cluster_id', 'quality_class_id', 'num_positive', 'num_negative']
+product_quality_relationship_table_columns = ['asin', 'quality', 'quality_cluster_id', 'class_id', 'num_positive', 'num_negative']
 product_quality_table = get_product_quality_table(PRODUCT_ASIN, product_info)
 
 # write to file
@@ -574,7 +574,7 @@ def get_snippet_table(asin, product_info, k=15, l=[]):
 
 
 # build snippet table
-snippet_table_columns = ['asin', 'word', 'review_id', 'sentence_id', 'sentence', 'polarity']
+snippet_table_columns = ['asin', 'quality', 'review_id', 'sentence_id', 'sentence', 'polarity']
 snippet_table = get_snippet_table(PRODUCT_ASIN, product_info)
 
 # write to file
