@@ -2,10 +2,13 @@ import mysql.connector
 import sys
 import nltk
 import pickle
+import json
+import pathlib2 as pathlib
 from pprint import pprint
 from nltk.parse.corenlp import CoreNLPDependencyParser
 from collections import defaultdict
 from nltk.tokenize import sent_tokenize
+from nltk.tokenize import word_tokenize
 from nltk.corpus import sentiwordnet as swn
 from nltk.corpus import wordnet as wn
 
@@ -17,7 +20,9 @@ if len(sys.argv) < 2:
 PRODUCT_ASIN = sys.argv[1]
 LEXICON_FILEPATH = "./lexicon.txt"
 CLASS_PICKLE = "./clustering/results/clean-classes.pkl"
+OUTPUT_DIR = "./output"
 MIN_THRESHOLD = 0.05
+
 
 # Start the CoreNLP server with:
 # java -mx4g -cp "./CoreNLP/*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 9000 -timeout 15000
@@ -33,6 +38,10 @@ config = {
 }
 connection = mysql.connector.connect(**config)
 cursor = connection.cursor(buffered=True)
+
+nltk.download('wordnet')
+
+pathlib.Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True) 
 
 # Get reviews and lexicons and clusters
 def get_all_reviews(asin):
@@ -70,7 +79,6 @@ def get_sorted_classes(features_count, MIN_NUM_REVIEWS):
         features_by_class[class_num][1] += cnt
 
     sorted_classes = sorted(features_by_class.values(), key=lambda x: x[1], reverse=True)
-    print("Not found in any cluster: " + str(not_found))
     return sorted_classes
 
 def is_sentiment_bearing(adj):
@@ -87,10 +95,7 @@ def filter_opinions(opinions, opinion_sentiments):
         if not result:
             opinions.remove(opinion)
             del opinion_sentiments[opinion]
-    
-reviews = get_all_reviews(PRODUCT_ASIN)
-positive_lexicon, negative_lexicon, neutral_lexicon = parse_lexicons(LEXICON_FILEPATH)
-feature_to_class = pickle.load(open(CLASS_PICKLE, "rb"))
+
 
 # DOUBLE-PROPAGATION
 # input: parsed_sentence, cumulative information dictionaries (FO_dict, OF_dict, FF_dict, OO_dict, features_count, opinions_count)
@@ -338,26 +343,65 @@ def extract_features_opinions(reviews):
            feature_opinions)
     return res
 
-# DOUBLE-PROP OUTPUTS
-features, \
-features_count, \
-opinions, \
-opinions_count, \
-raw_sentences, \
-parsed_sentences, \
-review_indices, \
-feature_sentiments_by_review, \
-feature_words_by_review, \
-feature_sentiments_cumulative, \
-feature_sentiments_pos, \
-feature_sentiments_neg, \
-opinion_words_by_review, \
-opinion_sentiments, \
-feature_opinions = extract_features_opinions(reviews)
 
-# PRINTS
+def process_asin(asin):
+    print('Processing {}'.format(asin))
+    product_reviews = get_all_reviews(asin)
+
+    product_info = {'asin':asin}
+    product_info['features'], \
+    product_info['features_count'], \
+    product_info['opinions'], \
+    product_info['opinions_count'], \
+    product_info['raw_sentences'], \
+    product_info['parsed_sentences'], \
+    product_info['review_indices'], \
+    product_info['feature_sentiments_by_review'], \
+    product_info['feature_words_by_review'], \
+    product_info['feature_sentiments_cumulative'], \
+    product_info['feature_sentiments_pos'], \
+    product_info['feature_sentiments_neg'], \
+    product_info['opinion_words_by_review'], \
+    product_info['opinion_sentiments'], \
+    product_info['feature_opinions'] = extract_features_opinions(product_reviews)
+
+    product_info['features_by_count'] = sorted(product_info['features_count'].items(), key=lambda x: x[1], reverse=True)
+    product_info['sorted_classes'] = get_sorted_classes(product_info['features_count'], MIN_THRESHOLD * len(product_reviews))
+
+    return product_info
+
+
+
+feature_to_class = pickle.load(open(CLASS_PICKLE, "rb"))
+positive_lexicon, negative_lexicon, neutral_lexicon = parse_lexicons(LEXICON_FILEPATH)
+
+###########################
+### DOUBLE-PROP OUTPUTS ###
+###########################
+product_info = process_asin(PRODUCT_ASIN)
+
+features = product_info['features']
+features_count = product_info['features_count']
+opinions = product_info['opinions']
+opinions_count = product_info['opinions_count']
+raw_sentences = product_info['raw_sentences']
+parsed_sentences = product_info['parsed_sentences']
+review_indices = product_info['review_indices']
+feature_sentiments_by_review = product_info['feature_sentiments_by_review']
+feature_words_by_review = product_info['feature_words_by_review']
+feature_sentiments_cumulative = product_info['feature_sentiments_cumulative']
+feature_sentiments_pos = product_info['feature_sentiments_pos']
+feature_sentiments_neg = product_info['feature_sentiments_neg']
+opinion_words_by_review = product_info['opinion_words_by_review']
+opinion_sentiments = product_info['opinion_sentiments']
+feature_opinions = product_info['feature_opinions']
+features_by_count = product_info['features_by_count']
+sorted_classes = product_info['sorted_classes']
+
+#############
+### PRINTS ##
+#############
 print("Feature clusters:")
-sorted_classes = get_sorted_classes(features_count, MIN_THRESHOLD * len(reviews))
 pprint(sorted_classes)
 
 # Set of features that made it into a cluster
@@ -387,3 +431,157 @@ for feature, opinions in feature_opinions.items():
         else:
             print("Error, " + opinion + " missing from sentiment list")
 pprint(feature_opinions)
+
+
+
+
+#################################
+### BUILD TABLES FOR DATABASE ###
+#################################
+
+# word2vec class table
+def get_class_table(feature_to_class):
+    classes = defaultdict(list)
+    for feature, class_ in feature_to_class.items():
+        classes[class_].append(feature)
+    classes = sorted(classes.items(), key=lambda x: x[0])
+    
+    return classes
+
+
+# product quality cluster table
+def get_quality_clusters_table(asin, product_info):
+    quality_clusters = []
+    
+    clusters_dict = defaultdict(list)
+    feature_to_class = pickle.load(open("./clustering/results/classes.pkl", "rb"))
+    features_by_count = sorted(product_info['features_count'].items(), key=lambda x:x[1], reverse=True)
+    for feature, _ in features_by_count:
+        try:
+            class_of_feature = feature_to_class[feature]
+            clusters_dict[class_of_feature].append(feature)
+        except KeyError:
+            pass
+    clusters = list(clusters_dict.values())
+
+    class_of_cluster = {}
+    clusters_inverse = {}
+    cluster_sentiments = {}
+    for id_, cluster_features in enumerate(clusters):
+        cluster_sentiment = [0, 0] # [pos, neg]
+        for feature in cluster_features:
+            clusters_inverse[feature] = id_
+            class_of_cluster[id_] = feature_to_class[feature]
+            cluster_sentiment[0] += len(product_info['feature_sentiments_pos'][feature])
+            cluster_sentiment[1] += len(product_info['feature_sentiments_neg'][feature])
+        cluster_sentiments[id_] = cluster_sentiment
+    for cluster_id, sentiments in cluster_sentiments.items():
+        class_id = class_of_cluster[cluster_id]
+        cluster_features = clusters_dict[class_id]
+        num_positive = cluster_sentiments[cluster_id][0]
+        num_negative = cluster_sentiments[cluster_id][1]
+        quality_clusters.append((asin, class_id, cluster_id, cluster_features, num_positive, num_negative))
+    product_info['cluster_sentiments'] = cluster_sentiments
+    product_info['class_of_cluster'] = class_of_cluster
+    product_info['clusters'] = clusters
+    return quality_clusters
+
+
+# product-quality relationship table
+def get_product_quality_table(asin, product_info):
+    product_quality_relationships = []
+    clusters = product_info['clusters']
+    cluster_sentiments = product_info['cluster_sentiments']
+    class_of_cluster = product_info['class_of_cluster']
+    for id_, cluster in enumerate(clusters):
+        quality_cluster_id = id_
+        quality_list = clusters[id_]
+        num_positive = cluster_sentiments[id_][0]
+        num_negative = cluster_sentiments[id_][1]
+        
+        for feature in cluster:
+            quality = feature
+            quality_class_id = class_of_cluster[id_]
+            num_positive = len(product_info['feature_sentiments_pos'][feature])
+            num_negative = len(product_info['feature_sentiments_neg'][feature])
+            product_quality_relationships.append((asin, quality, quality_cluster_id, quality_class_id, num_positive, num_negative))
+    return product_quality_relationships
+
+
+
+# CLASS TABLE
+# build table
+class_table_columns = ['id', 'quality_list']
+class_table = get_class_table(feature_to_class)
+
+# write to file 
+with open('{}/class_table.json'.format(OUTPUT_DIR), 'w') as class_table_file:
+    json.dump(dict(zip(class_table_columns, class_table)), class_table_file)
+
+
+# QUALITY CLUSTER TABLE
+# build table
+quality_clusters_table_columns = ['asin', 'class_id', 'quality_cluster_id', 'quality_list', 'num_positive', 'num_negative']
+quality_clusters_table = get_quality_clusters_table(PRODUCT_ASIN, product_info)
+
+# write to file
+quality_clusters_table_directory = '{}/quality_clusters'.format(OUTPUT_DIR)
+pathlib.Path(quality_clusters_table_directory).mkdir(parents=True, exist_ok=True) 
+with open('{}/{}.json'.format(quality_clusters_table_directory, PRODUCT_ASIN), 'w') as quality_clusters_table_file:
+    json.dump(dict(zip(quality_clusters_table_columns, quality_clusters_table)), quality_clusters_table_file)
+
+
+# PRODUCT QUALITY TABLE
+# build table
+product_quality_relationship_table_columns = ['asin', 'quality', 'quality_cluster_id', 'quality_class_id', 'num_positive', 'num_negative']
+product_quality_table = get_product_quality_table(PRODUCT_ASIN, product_info)
+
+# write to file
+product_quality_table_directory = '{}/product_quality'.format(OUTPUT_DIR)
+pathlib.Path(product_quality_table_directory).mkdir(parents=True, exist_ok=True) 
+with open('{}/{}.json'.format(product_quality_table_directory, PRODUCT_ASIN), 'w') as product_quality_table_file:
+    json.dump(dict(zip(product_quality_relationship_table_columns, product_quality_table)), product_quality_table_file)
+
+
+
+################################
+### GET REVIEW TEXT SNIPPETS ###
+################################
+
+# If k is defined, the method will return snippets for the top k most common features
+# If l is defined, it will return snippets containing words in l
+# Outputs a list of tuples of the form:
+#    (asin, feature, review_id, sentence_id, sentence, polarity)
+def get_snippet_table(asin, product_info, k=15, l=[]):
+    snippets = []
+    
+    raw_sentences = product_info['raw_sentences']
+    review_indices = product_info['review_indices']
+    top_features_by_count = [feature for feature,cnt in sorted(product_info['features_count'].items(), key=lambda x:x[1], reverse=True)]
+    
+    feature_set = set()
+    feature_set.union(top_features_by_count[:k])
+    feature_set.union(l)
+    
+    for sentence_id, (sentence,review_id) in enumerate(zip(raw_sentences,review_indices)):
+        for word in word_tokenize(sentence):
+            word = word.lower()
+            if word in feature_set and word in product_info['features']:
+                polarity = product_info['feature_sentiments_by_review'][review_id][word]
+                snippets.append((asin, word, review_id, sentence_id, sentence, polarity))
+            
+    return snippets
+
+
+# build snippet table
+snippet_table_columns = ['asin', 'word', 'review_id', 'sentence_id', 'sentence', 'polarity']
+snippet_table = get_snippet_table(PRODUCT_ASIN, product_info)
+
+# write to file
+snippet_table_directory = '{}/snippets'.format(OUTPUT_DIR)
+pathlib.Path(snippet_table_directory).mkdir(parents=True, exist_ok=True) 
+with open('{}/{}.json'.format(snippet_table_directory, PRODUCT_ASIN), 'w') as snippet_table_file:
+    json.dump(dict(zip(snippet_table_columns, snippet_table)), snippet_table_file)
+
+
+
