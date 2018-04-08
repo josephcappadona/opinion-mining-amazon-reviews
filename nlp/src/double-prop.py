@@ -20,7 +20,7 @@ if len(sys.argv) < 2:
 PRODUCT_ASIN = sys.argv[1]
 LEXICON_FILEPATH = "./lexicon.txt"
 CLASS_PICKLE = "./clustering/results/clean-classes.pkl"
-OUTPUT_DIR = "./output"
+OUTPUT_DIR = "../output"
 MIN_THRESHOLD = 0.05
 
 
