@@ -516,7 +516,9 @@ class_table = get_class_table(feature_to_class)
 
 # write to file
 with open('{}/class_table.json'.format(OUTPUT_DIR), 'w') as class_table_file:
-    json.dump(dict(zip(class_table_columns, class_table)), class_table_file)
+    for class_ in class_table:
+        json_ = json.dumps(dict(zip(class_table_columns, class_)), sort_keys=True, ensure_ascii=False)
+        class_table_file.write(json_ + '\n')
 
 
 # QUALITY CLUSTER TABLE
@@ -528,7 +530,9 @@ quality_clusters_table = get_quality_clusters_table(PRODUCT_ASIN, product_info)
 quality_clusters_table_directory = '{}/quality_clusters'.format(OUTPUT_DIR)
 pathlib.Path(quality_clusters_table_directory).mkdir(parents=True, exist_ok=True)
 with open('{}/{}.json'.format(quality_clusters_table_directory, PRODUCT_ASIN), 'w') as quality_clusters_table_file:
-    json.dump(dict(zip(quality_clusters_table_columns, quality_clusters_table)), quality_clusters_table_file)
+    for quality_cluster in quality_clusters_table:
+        json_ = json.dumps(dict(zip(quality_clusters_table_columns, quality_cluster)), sort_keys=True, ensure_ascii=False)
+        quality_clusters_table_file.write(json_ + '\n')
 
 
 # PRODUCT QUALITY TABLE
@@ -540,7 +544,10 @@ product_quality_table = get_product_quality_table(PRODUCT_ASIN, product_info)
 product_quality_table_directory = '{}/product_qualities'.format(OUTPUT_DIR)
 pathlib.Path(product_quality_table_directory).mkdir(parents=True, exist_ok=True)
 with open('{}/{}.json'.format(product_quality_table_directory, PRODUCT_ASIN), 'w') as product_quality_table_file:
-    json.dump(dict(zip(product_quality_relationship_table_columns, product_quality_table)), product_quality_table_file)
+    for product_quality in product_quality_table:
+        json_ = json.dumps(dict(zip(product_quality_relationship_table_columns, product_quality)), sort_keys=True, ensure_ascii=False)
+        product_quality_table_file.write(json_ + '\n')
+        
 
 
 
@@ -560,8 +567,8 @@ def get_snippet_table(asin, product_info, k=15, l=[]):
     top_features_by_count = [feature for feature,cnt in sorted(product_info['features_count'].items(), key=lambda x:x[1], reverse=True)]
 
     feature_set = set()
-    feature_set.union(top_features_by_count[:k])
-    feature_set.union(l)
+    feature_set = feature_set.union(top_features_by_count[:k])
+    feature_set = feature_set.union(l)
 
     for sentence_id, (sentence,review_id) in enumerate(zip(raw_sentences,review_indices)):
         for word in word_tokenize(sentence):
@@ -581,7 +588,9 @@ snippet_table = get_snippet_table(PRODUCT_ASIN, product_info)
 snippet_table_directory = '{}/snippets'.format(OUTPUT_DIR)
 pathlib.Path(snippet_table_directory).mkdir(parents=True, exist_ok=True)
 with open('{}/{}.json'.format(snippet_table_directory, PRODUCT_ASIN), 'w') as snippet_table_file:
-    json.dump(dict(zip(snippet_table_columns, snippet_table)), snippet_table_file)
+    for snippet in snippet_table:
+        json_ = json.dumps(dict(zip(snippet_table_columns, snippet)), sort_keys=True, ensure_ascii=False)
+        snippet_table_file.write(json_ + '\n')
 
 
 
