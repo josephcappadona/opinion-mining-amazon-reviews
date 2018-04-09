@@ -439,11 +439,15 @@ pprint(feature_opinions)
 ### BUILD TABLES FOR DATABASE ###
 #################################
 
-# word2vec class table
-def get_class_table(feature_to_class):
+def get_classes(feature_to_class):
     classes = defaultdict(list)
     for feature, class_ in feature_to_class.items():
         classes[class_].append(feature)
+    return classes
+
+# word2vec class table
+def get_class_table(feature_to_class):
+    classes = get_classes(feature_to_class)
     classes = sorted(classes.items(), key=lambda x: x[0])
 
     return classes
@@ -485,9 +489,10 @@ def get_quality_clusters_table(asin, product_info):
     product_info['class_of_cluster'] = class_of_cluster
     product_info['clusters'] = clusters
     return quality_clusters
+quality_clusters_table_columns = ['asin', 'class_id', 'quality_cluster_id', 'quality_list', 'num_positive', 'num_negative']
 
 
-# product-quality relationship table
+# product quality table
 def get_product_quality_table(asin, product_info):
     product_quality_relationships = []
     clusters = product_info['clusters']
@@ -504,9 +509,10 @@ def get_product_quality_table(asin, product_info):
             quality_class_id = class_of_cluster[id_]
             num_positive = len(product_info['feature_sentiments_pos'][feature])
             num_negative = len(product_info['feature_sentiments_neg'][feature])
-            product_quality_relationships.append((asin, quality, quality_cluster_id, quality_class_id, num_positive, num_negative))
+            # product_quality_relationships.append((asin, quality, quality_cluster_id, quality_class_id, num_positive, num_negative))
+            product_quality_relationships.append((asin, quality, quality_list, quality_class_id, quality_cluster_id, num_positive, num_negative, ''))
     return product_quality_relationships
-
+product_quality_relationship_table_columns = ['product', 'quality', 'quality_list_json',  'quality_class', 'quality_cluster_id', 'num_positive', 'num_negative', 'id']
 
 
 # CLASS TABLE
@@ -516,14 +522,12 @@ class_table = get_class_table(feature_to_class)
 
 # write to file
 with open('{}/class_table.json'.format(OUTPUT_DIR), 'w') as class_table_file:
-    for class_ in class_table:
-        json_ = json.dumps(dict(zip(class_table_columns, class_)), sort_keys=True, ensure_ascii=False)
-        class_table_file.write(json_ + '\n')
+    list_of_dicts = [dict(zip(class_table_columns, class_)) for class_ in class_table]
+    json.dump(list_of_dicts, class_table_file)
 
 
 # QUALITY CLUSTER TABLE
 # build table
-quality_clusters_table_columns = ['asin', 'class_id', 'quality_cluster_id', 'quality_list', 'num_positive', 'num_negative']
 quality_clusters_table = get_quality_clusters_table(PRODUCT_ASIN, product_info)
 
 # write to file
@@ -531,23 +535,43 @@ quality_clusters_table_directory = '{}/quality_clusters'.format(OUTPUT_DIR)
 pathlib.Path(quality_clusters_table_directory).mkdir(parents=True, exist_ok=True)
 with open('{}/{}.json'.format(quality_clusters_table_directory, PRODUCT_ASIN), 'w') as quality_clusters_table_file:
     for quality_cluster in quality_clusters_table:
-        json_ = json.dumps(dict(zip(quality_clusters_table_columns, quality_cluster)), sort_keys=True, ensure_ascii=False)
-        quality_clusters_table_file.write(json_ + '\n')
+        list_of_dicts = [dict(zip(quality_clusters_table_columns, quality_cluster)) for quality_cluster in quality_clusters_table]
+        json.dump(list_of_dicts, quality_clusters_table_file)
 
 
 # PRODUCT QUALITY TABLE
 # build table
-product_quality_relationship_table_columns = ['asin', 'quality', 'quality_cluster_id', 'class_id', 'num_positive', 'num_negative']
 product_quality_table = get_product_quality_table(PRODUCT_ASIN, product_info)
+
+# extract top qualities for each cluster
+top_product_quality_table = []
+max_num = {}
+for (asin, quality, quality_list, quality_class_id, quality_cluster_id, num_positive, num_negative, _) in product_quality_table:
+    if quality_class_id not in max_num:
+        max_num[quality_class_id] = [None,0]
+    if int(num_positive) + int(num_negative) > max_num[quality_class_id][1]:
+        max_num[quality_class_id] = (quality, int(num_positive) + int(num_negative))
+for pq in product_quality_table:
+    _, quality, _, quality_class_id, _, _, _, _ = pq
+    if quality == max_num[quality_class_id][0]:
+        top_product_quality_table.append(pq)
 
 # write to file
 product_quality_table_directory = '{}/product_qualities'.format(OUTPUT_DIR)
 pathlib.Path(product_quality_table_directory).mkdir(parents=True, exist_ok=True)
 with open('{}/{}.json'.format(product_quality_table_directory, PRODUCT_ASIN), 'w') as product_quality_table_file:
-    for product_quality in product_quality_table:
-        json_ = json.dumps(dict(zip(product_quality_relationship_table_columns, product_quality)), sort_keys=True, ensure_ascii=False)
-        product_quality_table_file.write(json_ + '\n')
-        
+    list_of_dicts = [dict(zip(product_quality_relationship_table_columns, product_quality)) for product_quality in top_product_quality_table]
+    classes_dict = get_classes(feature_to_class)
+    for dict_ in list_of_dicts:
+        quality_cluster_id = dict_['quality_cluster_id']
+        cluster_num_positive, cluster_num_negative = product_info['cluster_sentiments'][quality_cluster_id]
+        dict_['num_positive'] = cluster_num_positive
+        dict_['num_negative'] = cluster_num_negative
+    sorted_list = sorted(list_of_dicts, key=lambda x: x['num_positive']+x['num_negative'], reverse=True)
+
+    # only take top 5, since all rows outputted get displayed on the front end
+    json.dump(sorted_list[:5], product_quality_table_file)
+
 
 
 
@@ -578,10 +602,10 @@ def get_snippet_table(asin, product_info, k=15, l=[]):
                 snippets.append((asin, word, review_id, sentence_id, sentence, polarity))
 
     return snippets
+snippet_table_columns = ['asin', 'quality', 'review_id', 'sentence_id', 'sentence', 'polarity']
 
 
 # build snippet table
-snippet_table_columns = ['asin', 'quality', 'review_id', 'sentence_id', 'sentence', 'polarity']
 snippet_table = get_snippet_table(PRODUCT_ASIN, product_info)
 
 # write to file
@@ -589,8 +613,8 @@ snippet_table_directory = '{}/snippets'.format(OUTPUT_DIR)
 pathlib.Path(snippet_table_directory).mkdir(parents=True, exist_ok=True)
 with open('{}/{}.json'.format(snippet_table_directory, PRODUCT_ASIN), 'w') as snippet_table_file:
     for snippet in snippet_table:
-        json_ = json.dumps(dict(zip(snippet_table_columns, snippet)), sort_keys=True, ensure_ascii=False)
-        snippet_table_file.write(json_ + '\n')
+        list_of_dicts = [dict(zip(snippet_table_columns, snippet)) for snippet in snippet_table]
+        json.dump(list_of_dicts, snippet_table_file)
 
 
 
