@@ -1,6 +1,7 @@
 import sys
 import gzip
 import json
+import csv
 
 if len(sys.argv) < 2:
     print('Usage:  python metadata.py ASIN_1 [ASIN_2, ...]')
@@ -10,48 +11,69 @@ FILENAME = 'meta_Electronics.json.gz'
 ASINS = sys.argv[1:]
 METADATA_COLUMNS = ['id', 'title', 'categories', 'description', 'image_url']
 
+
 def get_metadata_lines():
     with gzip.open(FILENAME, 'r') as f:
         for line in f:
             yield eval(line)
+
 
 def get_metadata_lines_subset(asins):
     count = 0
     with gzip.open(FILENAME, 'r') as f:
         for line in f:
             count += 1
-            if count % 100000 == 0: print(count)
+            if count % 5000 == 0:
+                print(count)
             for asin in ASINS:
                 if asin in str(line):
                     yield eval(line)
 
+
+def fill_in_default_fields(d):
+    for field in METADATA_COLUMNS:
+        d[field] = d.get(field) or ''
+
+
+def export_to_csv(data):
+    filename = 'asin_subset_metadata_1.csv'
+    with open(filename, 'w') as csvfile:
+        fieldnames = METADATA_COLUMNS
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for v in data:
+            writer.writerow(v)
+    print('Metadata saved to {}\n'.format(filename))
+
+
+def export_json(data):
+    from pprint import pprint
+    pprint(data)
+    outfile = 'asin_subset_metadata_1.json'
+    f = open(outfile, 'wt')
+    json.dump(list(data), f)
+    f.close()
+    print('Metadata saved to {}\n'.format(outfile))
+
+
+def format_metadata_dict(meta_dict):
+    # Fill in default fields
+    fill_in_default_fields(meta_dict)
+    # reformat certain fields
+    meta_dict['image_url'] = meta_dict['imUrl']
+    meta_dict['id'] = meta_dict['asin']
+    meta_dict['categories'] = ','.join(meta_dict['categories'][0]) + ','
+
+    # Filter out columns originally not in there
+    meta_dict = {k: v for k, v in meta_dict.items() if k in METADATA_COLUMNS}
+    return meta_dict
+
+
 print("Retrieving metadata...")
 lines = get_metadata_lines_subset(ASINS)
-asin_metadatas = list(lines)
-subset_asin_metadatas = [x for x in asin_metadatas if x['asin'] in ASINS]
-
 print("\nFormatting metadata for data store...\n")
-d = {x['asin']: x for x in subset_asin_metadatas}
-asins = list(d.keys())
-for asin in asins:
-    # reformat certain fields
-    d[asin]['image_url'] = d[asin]['imUrl']
-    d[asin]['id'] = d[asin]['asin']
-    d[asin]['categories'] = ','.join(d[asin]['categories'][0]) + ','
-    if len(d[asin]['description']) > 255:
-        d[asin]['description'] = d[asin]['description'][:255]
+formatted_metadatas = (format_metadata_dict(metadata_dict)
+                       for metadata_dict in lines)
+export_json(formatted_metadatas)
 
-    # remove unneeded data
-    keys = list(d[asin].keys())
-    for key in keys:
-        if key not in METADATA_COLUMNS:
-            del d[asin][key]
-
-from pprint import pprint
-pprint(d)
-outfile = 'asin_subset_metadata_1.json'
-f = open(outfile, 'wt')
-json.dump(list(d.values()), f)
-f.close()
-print('Metadata saved to {}\n'.format(outfile))
-
+# export_to_csv(formatted_metadatas)
