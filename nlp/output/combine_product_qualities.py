@@ -40,7 +40,7 @@ for filename in onlyfiles:
         combined.extend(new_pq_list)
         print('Added {} product qualities\n'.format(len(new_snippet_list)))
 
-OUTFILE = dir_ + '/' + 'combined.json'
+OUTFILE = 'PQs_combined.json'
 print('Writing combined product qualities json to {}'.format(OUTFILE))
 json.dump(combined, open(OUTFILE, 'w'))
 

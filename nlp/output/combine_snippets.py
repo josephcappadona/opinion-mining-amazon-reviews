@@ -37,7 +37,7 @@ for filename in onlyfiles:
         combined.extend(new_snippet_list)
         print('Added {} snippets\n'.format(len(new_snippet_list)))
 
-OUTFILE = dir_ + '/' + 'combined.json'
+OUTFILE = 'snippets_combined.json'
 print('Writing combined snippets json to {}'.format(OUTFILE))
 json.dump(combined, open(OUTFILE, 'w'))
 
