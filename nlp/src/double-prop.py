@@ -456,7 +456,7 @@ def get_class_table(feature_to_class):
 
 
 # product quality cluster table
-def get_quality_clusters_table(asin, product_info, feature_to_class):
+def build_quality_clusters(asin, product_info, feature_to_class):
     quality_clusters = []
 
     clusters_dict = defaultdict(list)
@@ -489,8 +489,6 @@ def get_quality_clusters_table(asin, product_info, feature_to_class):
     product_info['cluster_sentiments'] = cluster_sentiments
     product_info['class_of_cluster'] = class_of_cluster
     product_info['clusters'] = clusters
-    return quality_clusters
-quality_clusters_table_columns = ['asin', 'class_id', 'quality_cluster_id', 'quality_list', 'num_positive', 'num_negative']
 
 
 # product quality table
@@ -519,7 +517,9 @@ def get_product_quality_table(asin, product_info):
 product_quality_relationship_table_columns = ['product', 'primary_quality', 'quality_list_json',  'quality_class', 'quality_cluster_id', 'num_positive', 'num_negative', 'id']
 
 
-# CLASS TABLE
+###############
+# CLASS TABLE #
+###############
 # build table
 class_table_columns = ['id', 'quality_list']
 class_table = get_class_table(feature_to_class)
@@ -529,21 +529,11 @@ with open('{}/class_table.json'.format(OUTPUT_DIR), 'w') as class_table_file:
     list_of_dicts = [dict(zip(class_table_columns, class_)) for class_ in class_table]
     json.dump(list_of_dicts, class_table_file)
 
-
-# QUALITY CLUSTER TABLE
+#########################
+# PRODUCT QUALITY TABLE #
+#########################
 # build table
-quality_clusters_table = get_quality_clusters_table(PRODUCT_ASIN, product_info, feature_to_class)
-
-# write to file
-quality_clusters_table_directory = '{}/quality_clusters'.format(OUTPUT_DIR)
-pathlib.Path(quality_clusters_table_directory).mkdir(parents=True, exist_ok=True)
-with open('{}/{}.json'.format(quality_clusters_table_directory, PRODUCT_ASIN), 'w') as quality_clusters_table_file:
-    list_of_dicts = [dict(zip(quality_clusters_table_columns, quality_cluster)) for quality_cluster in quality_clusters_table]
-    json.dump(list_of_dicts, quality_clusters_table_file)
-
-
-# PRODUCT QUALITY TABLE
-# build table
+build_quality_clusters(PRODUCT_ASIN, product_info, feature_to_class)
 product_quality_table = get_product_quality_table(PRODUCT_ASIN, product_info)
 
 # extract top qualities for each cluster
@@ -563,13 +553,16 @@ for pq in product_quality_table:
 product_quality_table_directory = '{}/product_qualities'.format(OUTPUT_DIR)
 pathlib.Path(product_quality_table_directory).mkdir(parents=True, exist_ok=True)
 with open('{}/{}.json'.format(product_quality_table_directory, PRODUCT_ASIN), 'w') as product_quality_table_file:
+    # turn tuples into dicts
     list_of_dicts = [dict(zip(product_quality_relationship_table_columns, product_quality)) for product_quality in top_product_quality_table]
+
     classes_dict = get_classes(feature_to_class)
     for dict_ in list_of_dicts:
         quality_cluster_id = dict_['quality_cluster_id']
+        # add cluster sentiment information
         cluster_num_positive, cluster_num_negative = product_info['cluster_sentiments'][quality_cluster_id]
-        dict_['num_positive'] = cluster_num_positive
-        dict_['num_negative'] = cluster_num_negative
+        dict_['cluster_num_positive'] = cluster_num_positive
+        dict_['cluster_num_negative'] = cluster_num_negative
     sorted_list = sorted(list_of_dicts, key=lambda x: x['num_positive']+x['num_negative'], reverse=True)
 
     # only take top 5, since all rows outputted get displayed on the front end
