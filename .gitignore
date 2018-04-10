@@ -8,8 +8,6 @@ nlp/src/features/output
 nlp/src/features/results
 nlp/src/*.pkl
 nlp/output/*.json
-nlp/output/product_qualities
-nlp/output/snippets
 nlp/ryinvenv/*
 nlp/samples/reviews_of_bad_products_asins.pickle
 
