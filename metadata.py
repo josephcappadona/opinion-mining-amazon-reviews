@@ -26,7 +26,8 @@ def get_metadata_lines_subset(asins):
             if count % 5000 == 0:
                 print(count)
             for asin in ASINS:
-                if asin in str(line):
+                asin_str = "'asin': '{}'".format(asin)
+                if asin_str in str(line):
                     yield eval(line)
 
 
