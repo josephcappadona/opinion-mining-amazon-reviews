@@ -7,15 +7,18 @@ if len(argv) != 2:
     print('Usage:  python combine_product_qualities.py PATH/TO/PQ/DIR/')
     quit()
 
-ORDERED_PQ_KEYS = ['id', 'product', 'quality_class', 'quality_list_json', 'primary_quality', 'num_positive', 'num_negative']
-
 dir_ = argv[1]
 path = dir_ + '/*'
 onlyfiles = glob.glob(path)
 
+OUTFILE_NAME = 'PQs_combined.json'
+
+# keys that correspond to their order in the data store
+ORDERED_PQ_KEYS = ['id', 'product', 'quality_class', 'quality_list_json', 'primary_quality', 'num_positive', 'num_negative']
+
 combined = []
 for filename in onlyfiles:
-    if filename.split('.')[-1] == 'json' and filename.split('/')[-1] != 'combined.json':
+    if filename.split('.')[-1] == 'json' and filename.split('/')[-1] != OUTFILE_NAME:
         print('Processing {}'.format(filename))
         datafile = open(filename)
         data = datafile.readlines()[0]
@@ -38,9 +41,9 @@ for filename in onlyfiles:
             new_pq_list.append(new_json)
 
         combined.extend(new_pq_list)
-        print('Added {} product qualities\n'.format(len(new_snippet_list)))
+        print('Added {} product qualities\n'.format(len(new_pq_list)))
 
-OUTFILE = 'PQs_combined.json'
-print('Writing combined product qualities json to {}'.format(OUTFILE))
+OUTFILE = dir_ + '/' + OUTFILE_NAME
+print('Writing {} combined product qualities json to {}'.format(len(combined), OUTFILE))
 json.dump(combined, open(OUTFILE, 'w'))
 
