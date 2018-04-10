@@ -2,6 +2,7 @@ import sys
 import gzip
 import json
 import csv
+import collections
 
 if len(sys.argv) < 2:
     print('Usage:  python metadata.py ASIN_1 [ASIN_2, ...]')
@@ -26,8 +27,10 @@ def get_metadata_lines_subset(asins):
             if count % 5000 == 0:
                 print(count)
             for asin in ASINS:
-                asin_str = "'asin': '{}'".format(asin)
-                if asin_str in str(line):
+                asin_str1 = "'asin': '{}'".format(asin)
+                asin_str2 = 'asin": "{}'.format(asin)
+                l = str(line)
+                if asin_str1 in l or asin_str2 in l:
                     yield eval(line)
 
 
@@ -67,7 +70,11 @@ def format_metadata_dict(meta_dict):
 
     # Filter out columns originally not in there
     meta_dict = {k: v for k, v in meta_dict.items() if k in METADATA_COLUMNS}
-    return meta_dict
+
+    new_dict_that_is_in_order_as_fuck = collections.OrderedDict()
+    for col in METADATA_COLUMNS:
+        new_dict_that_is_in_order_as_fuck[col] = meta_dict[col]
+    return new_dict_that_is_in_order_as_fuck
 
 
 print("Retrieving metadata...")
