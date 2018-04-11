@@ -40,18 +40,22 @@ config = {
 connection = mysql.connector.connect(**config)
 cursor = connection.cursor(buffered=True)
 
-nltk.download('wordnet')
+nltk.download('wordnet', quiet=True)
+nltk.download('sentiwordnet', quiet=True)
 
 pathlib.Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
 # Get reviews and lexicons and clusters
-def get_all_reviews(asin):
-    query = "SELECT review_text FROM review WHERE asin = '{}'".format(asin)
+def get_all_reviews(asins):
+    conditionals = ["asin = '{}'".format(asin) for asin in asins]
+    query = "SELECT asin, review_text, num_helpful FROM review1 WHERE {}".format(' OR '.join(conditionals))
     cursor.execute(query)
-    reviews = []
-    for (review_text) in cursor:
-        reviews.append(review_text[0])
-    print("# reviews: {}".format(len(reviews)))
+    reviews = defaultdict(list)
+    for (asin, review_text, helpful_count) in cursor:
+        reviews[asin].append((review_text, helpful_count))
+
+    for asin in asins:
+        print("# {} reviews: {}".format(asin, len(reviews[asin])))
     return reviews
 
 def parse_lexicons(filepath):
@@ -91,12 +95,10 @@ def is_sentiment_bearing(adj):
             ss_count += 1
             bd = swn.senti_synset(ss.name())
             total_obj += bd.obj_score()
-            print(ss.name(), ss.definition(), bd)
     if ss_count == 0:
         avg_obj = 2 # Make result be -1 if lookup fails
     else:
         avg_obj = round(total_obj * 1.0 / ss_count, 3)
-    #print("{3} / subj: {2}".format(avg_scores[0], avg_scores[1], 1-avg_scores[2], adj))
     return 1-avg_obj > SENTIMENT_THRESHOLD
 
 def filter_opinions(opinions, opinion_sentiments):
@@ -280,7 +282,7 @@ def extract_features_opinions(reviews):
     review_indices = []
     review_info = {} # store info about deps on per review basis
     for i, review in enumerate(reviews):
-        if i % 500 == 0:
+        if i % (len(reviews) / 10) == 0:
             print("Processing review: " + str(i))
         OF_dict = {}
         FO_dict = {}
@@ -288,14 +290,18 @@ def extract_features_opinions(reviews):
         FF_dict = defaultdict(list)
 
         raw_sentences.extend(sent_tokenize(review))
-        parse = nlp.parse_text(review)
-        parses.append(parse)
-        for sentence in parse:
-            # extract relevant dependency information
-            extracted_sentence = extract_relevant_dependencies(sentence, FO_dict, OF_dict, FF_dict, OO_dict, features_count, opinions_count, feature_opinions)
+        try:
+            parse = nlp.parse_text(review)
+            parses.append(parse)
+            for sentence in parse:
+                # extract relevant dependency information
+                extracted_sentence = extract_relevant_dependencies(sentence, FO_dict, OF_dict, FF_dict, OO_dict, features_count, opinions_count, feature_opinions)
 
-            review_indices.append(i)
-            parsed_sentences.append(extracted_sentence)
+                parsed_sentences.append(sentence.triples())
+        except ValueError:
+            # should not continue here because it would throw off the review_info indexes
+            parse = []
+        review_indices.append(i)
 
         review_info[i] = { 'index' : i,
                            'OF_dict' : OF_dict,
@@ -355,11 +361,11 @@ def extract_features_opinions(reviews):
     return res
 
 
-def process_asin(asin):
+def process_asin(asin, reviews):
     print('Processing {}'.format(asin))
-    product_reviews = get_all_reviews(asin)
+    product_reviews, helpful_count = zip(*reviews)
 
-    product_info = {'asin':asin}
+    product_info = {'asin':asin, 'helpful_count':helpful_count}
     product_info['features'], \
     product_info['features_count'], \
     product_info['opinions'], \
@@ -389,8 +395,10 @@ positive_lexicon, negative_lexicon, neutral_lexicon = parse_lexicons(LEXICON_FIL
 ### DOUBLE-PROP OUTPUTS ###
 ###########################
 
+print('Fetching review data...')
+reviews = get_all_reviews(PRODUCT_ASINS)
 for PRODUCT_ASIN in PRODUCT_ASINS:
-    product_info = process_asin(PRODUCT_ASIN)
+    product_info = process_asin(PRODUCT_ASIN, reviews[PRODUCT_ASIN])
 
     features = product_info['features']
     features_count = product_info['features_count']
@@ -526,6 +534,40 @@ def get_product_quality_table(asin, product_info):
     return product_quality_relationships
 product_quality_relationship_table_columns = ['product', 'primary_quality', 'quality_list_json',  'quality_class', 'quality_cluster_id', 'num_positive', 'num_negative', 'id']
 
+
+# snippet table
+# If k is defined, the method will return snippets for the top k most common features
+# If l is defined, it will return snippets containing words in l
+# Outputs a list of tuples of the form:
+#    (asin, feature, review_id, sentence_id, sentence, polarity)
+def get_snippet_table(asin, product_info, feature_to_class, k=15, l=[]):
+    snippets = []
+
+    raw_sentences = product_info['raw_sentences']
+    review_indices = product_info['review_indices']
+    helpful_count = product_info['helpful_count']
+    top_features_by_count = [feature for feature,cnt in sorted(product_info['features_count'].items(), key=lambda x:x[1], reverse=True)]
+
+    feature_set = set()
+    feature_set = feature_set.union(top_features_by_count[:k])
+    feature_set = feature_set.union(l)
+
+    for sentence_id, (sentence,review_id) in enumerate(zip(raw_sentences,review_indices)):
+        for word in word_tokenize(sentence):
+            word = word.lower()
+            if word in feature_set and word in product_info['features']:
+                polarity = product_info['feature_sentiments_by_review'][review_id][word]
+                helpful_count_review = helpful_count[review_id]
+                try:
+                    quality_class_id = feature_to_class[word]
+                except KeyError:
+                    continue
+                snippets.append((asin, word, quality_class_id, review_id, sentence_id, sentence, polarity, helpful_count))
+
+    return snippets
+snippet_table_columns = ['asin', 'quality', 'quality_class_id', 'review_id', 'sentence_id', 'sentence', 'polarity', 'helpful_count']
+
+
 def generate_tables():
     ###############
     # CLASS TABLE #
@@ -579,39 +621,9 @@ def generate_tables():
         json.dump(sorted_list, product_quality_table_file)
 
 
-
-
     ################################
     ### GET REVIEW TEXT SNIPPETS ###
     ################################
-
-    # If k is defined, the method will return snippets for the top k most common features
-    # If l is defined, it will return snippets containing words in l
-    # Outputs a list of tuples of the form:
-    #    (asin, feature, review_id, sentence_id, sentence, polarity)
-    def get_snippet_table(asin, product_info, k=15, l=[]):
-        snippets = []
-
-        raw_sentences = product_info['raw_sentences']
-        review_indices = product_info['review_indices']
-        top_features_by_count = [feature for feature,cnt in sorted(product_info['features_count'].items(), key=lambda x:x[1], reverse=True)]
-
-        feature_set = set()
-        feature_set = feature_set.union(top_features_by_count[:k])
-        feature_set = feature_set.union(l)
-
-        for sentence_id, (sentence,review_id) in enumerate(zip(raw_sentences,review_indices)):
-            for word in word_tokenize(sentence):
-                word = word.lower()
-                if word in feature_set and word in product_info['features']:
-                    polarity = product_info['feature_sentiments_by_review'][review_id][word]
-                    snippets.append((asin, word, review_id, sentence_id, sentence, polarity))
-
-        return snippets
-    snippet_table_columns = ['asin', 'quality', 'review_id', 'sentence_id', 'sentence', 'polarity']
-
-
-    # build snippet table
     snippet_table = get_snippet_table(PRODUCT_ASIN, product_info)
 
     # write to file

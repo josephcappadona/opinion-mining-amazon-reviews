@@ -259,7 +259,7 @@ def double_propagation_iterate(all_review_info,
 def extract_features_opinions(reviews):
     features = set()
     features_count = defaultdict(int)
-    opinions = positive_lexicon.union(negative_lexicon)
+    opinions = positive_lexicon.union(negative_lexicon).union(neutral_lexicon)
     opinions_count = defaultdict(int)
     feature_opinions = defaultdict(list)
 
@@ -277,14 +277,18 @@ def extract_features_opinions(reviews):
         FF_dict = defaultdict(list)
 
         raw_sentences.extend(sent_tokenize(review))
-        parse = nlp.parse_text(review)
-        parses.append(parse)
-        for sentence in parse:
-            # extract relevant dependency information
-            extracted_sentence = extract_relevant_dependencies(sentence, FO_dict, OF_dict, FF_dict, OO_dict, features_count, opinions_count, feature_opinions)
+        try:
+            parse = nlp.parse_text(review)
+            parses.append(parse)
+            for sentence in parse:
+                # extract relevant dependency information
+                extracted_sentence = extract_relevant_dependencies(sentence, FO_dict, OF_dict, FF_dict, OO_dict, features_count, opinions_count, feature_opinions)
 
-            review_indices.append(i)
-            parsed_sentences.append(sentence.triples())
+                parsed_sentences.append(sentence.triples())
+        except ValueError:
+            # should not continue here because it would throw off the review_info indexes
+            parse = []
+        review_indices.append(i)
 
         review_info[i] = { 'index' : i,
                            'OF_dict' : OF_dict,
@@ -302,7 +306,7 @@ def extract_features_opinions(reviews):
     feature_words_by_review = defaultdict(set) # keep track of the feature words in each review
     opinion_words_by_review = defaultdict(set) # keep track of the opinion words in each review
     opinion_sentiments = {} # same sentiment for opinion words throughout the corpus (this is an assumption [Observation 2])
-    opinion_sentiments.update({op:(1 if op in positive_lexicon else -1) for op in opinions})
+    opinion_sentiments.update({op:(1 if op in positive_lexicon else -1 if op in negative_lexicon else 0) for op in opinions})
 
     while (True):
         print("DP Iteration: {}".format(i))
