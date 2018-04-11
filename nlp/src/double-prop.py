@@ -39,17 +39,18 @@ config = {
 connection = mysql.connector.connect(**config)
 cursor = connection.cursor(buffered=True)
 
-nltk.download('wordnet')
+nltk.download('wordnet', quiet=True)
 
 pathlib.Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
 # Get reviews and lexicons and clusters
 def get_all_reviews(asin):
-    query = "SELECT review_text FROM review WHERE asin = '{}'".format(asin)
+    query = "SELECT review_text, num_helpful FROM review1 WHERE asin = '{}'".format(asin)
     cursor.execute(query)
     reviews = []
-    for (review_text) in cursor:
-        reviews.append(review_text[0])
+    for (review_text, num_helpful) in cursor:
+        reviews.append((review_text, num_helpful))
+
     print("# reviews: {}".format(len(reviews)))
     return reviews
 
@@ -131,7 +132,6 @@ def extract_relevant_dependencies(parsed_sentence, FO_dict, OF_dict, FF_dict, OO
                 features_count[gov] += 1
                 features_count[dep] += 1
         extracted_sentence.append(((gov, gov_pos), dependency, (dep, dep_pos)))
-    #parsed_sentences.append(extracted_sentence)
     return extracted_sentence
 
 
@@ -284,7 +284,7 @@ def extract_features_opinions(reviews):
             extracted_sentence = extract_relevant_dependencies(sentence, FO_dict, OF_dict, FF_dict, OO_dict, features_count, opinions_count, feature_opinions)
 
             review_indices.append(i)
-            parsed_sentences.append(extracted_sentence)
+            parsed_sentences.append(sentence.triples())
 
         review_info[i] = { 'index' : i,
                            'OF_dict' : OF_dict,
@@ -346,9 +346,9 @@ def extract_features_opinions(reviews):
 
 def process_asin(asin):
     print('Processing {}'.format(asin))
-    product_reviews = get_all_reviews(asin)
+    product_reviews, num_helpful = zip(*get_all_reviews(asin))
 
-    product_info = {'asin':asin}
+    product_info = {'asin':asin, 'num_helpful':num_helpful}
     product_info['features'], \
     product_info['features_count'], \
     product_info['opinions'], \
@@ -579,11 +579,12 @@ with open('{}/{}.json'.format(product_quality_table_directory, PRODUCT_ASIN), 'w
 # If l is defined, it will return snippets containing words in l
 # Outputs a list of tuples of the form:
 #    (asin, feature, review_id, sentence_id, sentence, polarity)
-def get_snippet_table(asin, product_info, k=15, l=[]):
+def get_snippet_table(asin, product_info, feature_to_class, k=15, l=[]):
     snippets = []
 
     raw_sentences = product_info['raw_sentences']
     review_indices = product_info['review_indices']
+    num_helpful = product_info['num_helpful']
     top_features_by_count = [feature for feature,cnt in sorted(product_info['features_count'].items(), key=lambda x:x[1], reverse=True)]
 
     feature_set = set()
@@ -595,14 +596,19 @@ def get_snippet_table(asin, product_info, k=15, l=[]):
             word = word.lower()
             if word in feature_set and word in product_info['features']:
                 polarity = product_info['feature_sentiments_by_review'][review_id][word]
-                snippets.append((asin, word, review_id, sentence_id, sentence, polarity))
+                helpful_count = num_helpful[review_id]
+                try:
+                    quality_class_id = feature_to_class[word]
+                except KeyError:
+                    continue
+                snippets.append((asin, word, quality_class_id, review_id, sentence_id, sentence, polarity, helpful_count))
 
     return snippets
-snippet_table_columns = ['asin', 'quality', 'review_id', 'sentence_id', 'sentence', 'polarity']
+snippet_table_columns = ['asin', 'quality', 'quality_class_id', 'review_id', 'sentence_id', 'sentence', 'polarity', 'helpful_count']
 
 
 # build snippet table
-snippet_table = get_snippet_table(PRODUCT_ASIN, product_info)
+snippet_table = get_snippet_table(PRODUCT_ASIN, product_info, feature_to_class)
 
 # write to file
 snippet_table_directory = '{}/snippets'.format(OUTPUT_DIR)
