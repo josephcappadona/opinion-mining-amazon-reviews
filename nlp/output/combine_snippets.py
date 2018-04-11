@@ -15,7 +15,7 @@ onlyfiles = glob.glob(path)
 OUTFILE_NAME = 'snippets_combined.json'
 
 # keys that correspond to their order in the data store
-ORDERED_SNIPPET_KEYS = ['id', 'product', 'quality_class', 'quality', 'polarity', 'sentence']
+ORDERED_SNIPPET_KEYS = ['id', 'product', 'quality_class', 'quality', 'polarity', 'sentence', 'helpful_count']
 
 # for backfilling quality_class_id
 import pickle
@@ -39,6 +39,7 @@ for filename in onlyfiles:
             if 'quality_class' not in json_:
                 try:
                     json_['quality_class'] = feature_to_class[json_['quality']]
+                    json_['helpful_count'] = json_['helpful_count']
                 except KeyError:
                     continue
 
@@ -47,8 +48,6 @@ for filename in onlyfiles:
             for key in ORDERED_SNIPPET_KEYS:
                 new_json[key] = json_[key]
             new_snippet_list.append(new_json)
-            if len(new_snippet_list) == 5:
-                break
 
         combined.extend(new_snippet_list)
         print('Added {} snippets\n'.format(len(new_snippet_list)))

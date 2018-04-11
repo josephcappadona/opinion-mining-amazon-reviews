@@ -3,11 +3,12 @@ import json
 from collections import OrderedDict
 from sys import argv
 
-if len(argv) != 2:
-    print('Usage:  python combine_product_qualities.py PATH/TO/PQ/DIR/')
+if len(argv) < 2:
+    print('Usage:  python combine_product_qualities.py PATH/TO/PQ/DIR/ [ASIN_1 ASIN_2 ...]')
     quit()
 
 dir_ = argv[1]
+valid_asins = set(argv[2:]) if len(argv) > 2 else []
 path = dir_ + '/*'
 onlyfiles = glob.glob(path)
 
@@ -27,6 +28,8 @@ for filename in onlyfiles:
         new_pq_list = [] # list for filtered/modified product quality data
         for json_ in pq_list:
             # clean data
+            if valid_asins != [] and json_['product'] not in valid_asins:
+                continue
             if 'quality' in json_:
                 json_['primary_quality'] = json_['quality']
                 json_.pop('quality', None)
