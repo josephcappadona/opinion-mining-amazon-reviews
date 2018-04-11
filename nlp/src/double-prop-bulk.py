@@ -112,7 +112,7 @@ def filter_opinions(opinions, opinion_sentiments):
 # DOUBLE-PROPAGATION
 # input: parsed_sentence, cumulative information dictionaries (FO_dict, OF_dict, FF_dict, OO_dict, features_count, opinions_count)
 # output: extracted dependency features
-def extract_relevant_dependencies(parsed_sentence, FO_dict, OF_dict, FF_dict, OO_dict, features_count, opinions_count, feature_opinions):
+def extract_relevant_dependencies(parsed_sentence, FO_dict, OF_dict, FF_dict, OO_dict, features_count, opinions_count, feature_opinions, review_id, sentence_id):
     extracted_sentence = []
     for (gov, gov_pos), dependency, (dep, dep_pos) in parsed_sentence.triples():
         if not gov.isalpha() or not dep.isalpha():
@@ -124,13 +124,13 @@ def extract_relevant_dependencies(parsed_sentence, FO_dict, OF_dict, FF_dict, OO
             FO_dict[dep] = gov
             features_count[dep] += 1
             opinions_count[gov] += 1
-            feature_opinions[dep].append(gov)
+            feature_opinions[review_id][sentence_id][dep].append(gov)
         elif dependency == "amod" and gov_pos == "NN" and dep_pos == "JJ" and is_sentiment_bearing(dep):
             OF_dict[dep] = gov
             FO_dict[gov] = dep
             opinions_count[dep] += 1
             features_count[gov] += 1
-            feature_opinions[gov].append(dep)
+            feature_opinions[review_id][sentence_id][gov].append(dep)
         elif dependency == "conj":
             if gov_pos == "JJ" and dep_pos == "JJ" and is_sentiment_bearing(gov) and is_sentiment_bearing(dep):
                 OO_dict[gov].append(dep)
@@ -274,36 +274,42 @@ def extract_features_opinions(reviews):
     features_count = defaultdict(int)
     opinions = positive_lexicon.union(negative_lexicon).union(neutral_lexicon)
     opinions_count = defaultdict(int)
-    feature_opinions = defaultdict(list)
+    feature_opinions = {}
 
     raw_sentences = []
     parsed_sentences = []
     parses = []
     review_indices = []
     review_info = {} # store info about deps on per review basis
-    for i, review in enumerate(reviews):
-        if i % (len(reviews) / 10) == 0:
-            print("Processing review: " + str(i))
+    for r_id, review in enumerate(reviews):
+        if r_id % int(len(reviews) / 10) == 0:
+            print("Processing review: " + str(r_id))
         OF_dict = {}
         FO_dict = {}
         OO_dict = defaultdict(list)
         FF_dict = defaultdict(list)
+        feature_opinions[r_id] = {}
 
-        raw_sentences.extend(sent_tokenize(review))
-        try:
-            parse = nlp.parse_text(review)
-            parses.append(parse)
-            for sentence in parse:
-                # extract relevant dependency information
-                extracted_sentence = extract_relevant_dependencies(sentence, FO_dict, OF_dict, FF_dict, OO_dict, features_count, opinions_count, feature_opinions)
+        tokenized_review = sent_tokenize(review)
+        for s_id,sentence in enumerate(tokenized_review):
+            feature_opinions[r_id][s_id] = defaultdict(list)
+            try:
+                nlp_parses = nlp.parse_text(sentence)
+                raw_sentences.append(sentence)
+                review_indices.append(r_id)
+                for parse in nlp_parses:
+                    parses.append(parse)
+                    # extract relevant dependency information
+                    extracted_sentence = extract_relevant_dependencies(parse, FO_dict, OF_dict, FF_dict, OO_dict, features_count, opinions_count, feature_opinions, r_id, s_id)
 
-                parsed_sentences.append(sentence.triples())
-        except ValueError:
-            # should not continue here because it would throw off the review_info indexes
-            parse = []
-        review_indices.append(i)
+                    parsed_sentences.append(parse.triples())
+            except ValueError:
+                # should not continue here because it would throw off the review_info indexes
+                parses.append([])
+                raw_sentences.append('')
+                parsed_sentences.append([])
 
-        review_info[i] = { 'index' : i,
+        review_info[r_id] = { 'index' : r_id,
                            'OF_dict' : OF_dict,
                            'FO_dict' : FO_dict,
                            'OO_dict' : OO_dict,
@@ -322,7 +328,7 @@ def extract_features_opinions(reviews):
     opinion_sentiments.update({op:(1 if op in positive_lexicon else -1 if op in negative_lexicon else 0) for op in opinions})
 
     while (True):
-        #print("DP Iteration: {}".format(i))
+        print("DP Iteration: {}".format(i))
         i += 1
 
         # double propagation step
@@ -362,7 +368,6 @@ def extract_features_opinions(reviews):
 
 
 def process_asin(asin, reviews):
-    print('Processing {}'.format(asin))
     product_reviews, helpful_count = zip(*reviews)
 
     product_info = {'asin':asin, 'helpful_count':helpful_count}
@@ -391,15 +396,17 @@ def process_asin(asin, reviews):
 feature_to_class = pickle.load(open(CLASS_PICKLE, "rb"))
 positive_lexicon, negative_lexicon, neutral_lexicon = parse_lexicons(LEXICON_FILEPATH)
 
-###########################
-### DOUBLE-PROP OUTPUTS ###
-###########################
 
 print('Fetching review data...')
 reviews = get_all_reviews(PRODUCT_ASINS)
-for PRODUCT_ASIN in PRODUCT_ASINS:
-    product_info = process_asin(PRODUCT_ASIN, reviews[PRODUCT_ASIN])
+for p, PRODUCT_ASIN in enumerate(PRODUCT_ASINS):
+    product_reviews = reviews[PRODUCT_ASIN]
+    print('{} Processing {} ({})'.format(p, PRODUCT_ASIN, len(product_reviews)))
+    product_info = process_asin(PRODUCT_ASIN, product_reviews)
 
+    ###########################
+    ### DOUBLE-PROP OUTPUTS ###
+    ###########################
     features = product_info['features']
     features_count = product_info['features_count']
     opinions = product_info['opinions']
@@ -431,14 +438,17 @@ for PRODUCT_ASIN in PRODUCT_ASINS:
             final_features.add(feature)
     for feature in list(feature_opinions.keys()):
         if feature not in final_features:
-            del feature_opinions[feature]
+            for r_id in feature_opinions:
+                for s_id in feature_opinions[r_id]:
+                    feature_opinions[r_id][s_id].pop(feature, None)
     # Set of opinions related to features in a cluster
     final_opinions = set()
-    for opinions in feature_opinions.values():
-        for opinion in opinions:
-            final_opinions.add(opinion)
+    for r_id in feature_opinions:
+        for s_id in feature_opinions[r_id]:
+            final_opinions.update(set([o for os in feature_opinions[r_id][s_id].values() for o in os]))
 
-    #filter_opinions(opinions, opinion_sentiments)
+    print(opinions)
+    filter_opinions(opinions, opinion_sentiments)
     lexicon = positive_lexicon.union(negative_lexicon)
     print("Opinion word sentiments (newly discovered):")
     pprint(sorted([(opinion, sentiment) for opinion, sentiment in opinion_sentiments.items()
@@ -551,18 +561,18 @@ def get_snippet_table(asin, product_info, feature_to_class, k=15, l=[]):
     feature_set = set()
     feature_set = feature_set.union(top_features_by_count[:k])
     feature_set = feature_set.union(l)
-
     for sentence_id, (sentence,review_id) in enumerate(zip(raw_sentences,review_indices)):
         for word in word_tokenize(sentence):
             word = word.lower()
-            if word in feature_set and word in product_info['features']:
+            if word in feature_set and word in product_info['feature_words_by_review'][review_id]:
                 polarity = product_info['feature_sentiments_by_review'][review_id][word]
                 helpful_count_review = helpful_count[review_id]
+                print('>', review_id, sentence_id, word, polarity)
                 try:
                     quality_class_id = feature_to_class[word]
                 except KeyError:
                     continue
-                snippets.append((asin, word, quality_class_id, review_id, sentence_id, sentence, polarity, helpful_count))
+                snippets.append((asin, word, quality_class_id, review_id, sentence_id, sentence, polarity, helpful_count_review))
 
     return snippets
 snippet_table_columns = ['asin', 'quality', 'quality_class_id', 'review_id', 'sentence_id', 'sentence', 'polarity', 'helpful_count']
@@ -624,7 +634,7 @@ def generate_tables():
     ################################
     ### GET REVIEW TEXT SNIPPETS ###
     ################################
-    snippet_table = get_snippet_table(PRODUCT_ASIN, product_info)
+    snippet_table = get_snippet_table(PRODUCT_ASIN, product_info, feature_to_class)
 
     # write to file
     snippet_table_directory = '{}/snippets'.format(OUTPUT_DIR)
@@ -632,3 +642,7 @@ def generate_tables():
     with open('{}/{}.json'.format(snippet_table_directory, PRODUCT_ASIN), 'w') as snippet_table_file:
         list_of_dicts = [dict(zip(snippet_table_columns, snippet)) for snippet in snippet_table]
         json.dump(list_of_dicts, snippet_table_file)
+
+
+generate_tables()
+

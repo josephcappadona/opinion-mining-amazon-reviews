@@ -4,6 +4,7 @@ import json
 import csv
 import collections
 import pathlib2 as pathlib
+import time
 
 if len(sys.argv) < 2:
     print('Usage:  python metadata.py ASIN_1 [ASIN_2, ...]')
@@ -13,7 +14,8 @@ FILENAME = 'meta_Electronics.json.gz'
 ASINS = set(sys.argv[1:])
 METADATA_COLUMNS = ['id', 'title', 'categories', 'description', 'image_url']
 OUTPUT_DIR = '../output/metadata'
-OUTFILE = 'metadata_{}.json'.format('_'.join(ASINS))
+file_id = str(int(time.time()))
+OUTFILE = 'metadata_{}.json'.format(file_id)
 
 # make sure OUTPUT_DIR exists
 pathlib.Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
