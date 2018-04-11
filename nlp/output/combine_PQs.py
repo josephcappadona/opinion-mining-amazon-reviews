@@ -3,23 +3,23 @@ import json
 from collections import OrderedDict
 from sys import argv
 
-if len(argv) < 2:
-    print('Usage:  python combine_product_qualities.py PATH/TO/PQ/DIR/ [ASIN_1 ASIN_2 ...]')
+if len(argv) < 3:
+    print('Usage:  python combine_product_qualities.py PATH/TO/PQ/DIR/ MAX [ASIN_1 ASIN_2 ...]')
     quit()
 
 dir_ = argv[1]
-valid_asins = set(argv[2:]) if len(argv) > 2 else []
-path = dir_ + '/*'
-onlyfiles = glob.glob(path)
+pq_path = dir_ + '/*'
+pq_filenames = glob.glob(pq_path)
+valid_asins = set(argv[3:] if len(argv) > 3 else [fn.split('/')[-1].split('.')[0] for fn in pq_filenames if 'PQs_combined' not in fn.split('/')[-1]])
 
-OUTFILE_NAME = 'PQs_combined.json'
+MAX = int(argv[2])
 
 # keys that correspond to their order in the data store
 ORDERED_PQ_KEYS = ['id', 'product', 'quality_class', 'quality_list_json', 'primary_quality', 'num_positive', 'num_negative']
 
 combined = []
-for filename in onlyfiles:
-    if filename.split('.')[-1] == 'json' and filename.split('/')[-1] != OUTFILE_NAME:
+for filename in pq_filenames:
+    if 'PQs_combined' not in filename.split('/')[-1]:
         print('Processing {}'.format(filename))
         datafile = open(filename)
         data = datafile.readlines()[0]
@@ -28,7 +28,7 @@ for filename in onlyfiles:
         new_pq_list = [] # list for filtered/modified product quality data
         for json_ in pq_list:
             # clean data
-            if valid_asins != [] and json_['product'] not in valid_asins:
+            if json_['product'] not in valid_asins:
                 continue
             if 'quality' in json_:
                 json_['primary_quality'] = json_['quality']
@@ -43,10 +43,13 @@ for filename in onlyfiles:
                 new_json[key] = json_[key]
             new_pq_list.append(new_json)
 
-        combined.extend(new_pq_list)
-        print('Added {} product qualities\n'.format(len(new_pq_list)))
+        new_pq_list_sorted = sorted(new_pq_list, reverse=True, key=lambda pq: pq['num_positive']+pq['num_negative'])
+        combined.extend(new_pq_list_sorted[:MAX])
+        print('Added {} product qualities\n'.format(len(new_pq_list_sorted[:MAX])))
 
-OUTFILE = dir_ + '/' + OUTFILE_NAME
-print('Writing {} combined product qualities json to {}'.format(len(combined), OUTFILE))
-json.dump(combined, open(OUTFILE, 'w'))
+OUTFILE_NAME = 'PQs_combined_{}_{}.json'.format(len(combined), MAX)
+OUTFILE_PATH = dir_ + '/' + OUTFILE_NAME
+print('Writing {} combined product qualities (over {} products) to {}'.format(len(combined), len(valid_asins), OUTFILE_PATH))
+
+json.dump(combined, open(OUTFILE_PATH, 'w'))
 

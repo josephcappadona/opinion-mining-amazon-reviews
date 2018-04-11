@@ -4,18 +4,21 @@ from collections import OrderedDict
 from sys import argv
 from pprint import pprint
 
-if len(argv) != 2:
-    print('Usage:  python combine_snippets.py PATH/TO/SNIPPETS/DIR/')
+if len(argv) < 3:
+    print('Usage:  python combine_snippets.py PATH/TO/SNIPPETS/DIR/ MAX [ASIN_1 ASIN_2 ...]\n\tMAX = maximum number of snippets for a particular product')
     quit()
 
 dir_ = argv[1]
-path = dir_ + '/*'
-onlyfiles = glob.glob(path)
+snippet_path = dir_ + '/*'
+snippet_filenames = glob.glob(snippet_path)
 
-OUTFILE_NAME = 'snippets_combined.json'
+valid_asins = set(argv[3:] if len(argv) > 3 else [fn.split('/')[-1].split('.')[0] for fn in snippet_filenames if 'snippets_combined' not in fn.split('/')[-1]])
+
+MAX = int(argv[2])
 
 # keys that correspond to their order in the data store
 ORDERED_SNIPPET_KEYS = ['id', 'product', 'quality_class', 'quality', 'polarity', 'sentence', 'helpful_count']
+
 
 # for backfilling quality_class_id
 import pickle
@@ -24,8 +27,8 @@ feature_to_class = pickle.load(open(CLASS_PICKLE, "rb"))
 
 
 combined = []
-for filename in onlyfiles:
-    if filename.split('.')[-1] == 'json' and filename.split('/')[-1] != OUTFILE_NAME:
+for filename in snippet_filenames:
+    if 'snippets_combined' not in filename.split('/')[-1]:
         print('Processing {}'.format(filename))
         datafile = open(filename)
         data = datafile.readlines()[0]
@@ -34,6 +37,8 @@ for filename in onlyfiles:
         new_snippet_list = [] # list for filtered/modified snippet data
         for json_ in snippet_list:
             # clean data
+            if json_['asin'] not in valid_asins:
+                continue
             json_['product'] = json_['asin']
             json_['id'] = ''
             if 'quality_class' not in json_:
@@ -49,10 +54,13 @@ for filename in onlyfiles:
                 new_json[key] = json_[key]
             new_snippet_list.append(new_json)
 
-        combined.extend(new_snippet_list)
-        print('Added {} snippets\n'.format(len(new_snippet_list)))
+        new_snippet_list_sorted = sorted(new_snippet_list, reverse=True, key=lambda s: s['helpful_count'])
+        combined.extend(new_snippet_list_sorted[:MAX])
+        print('Added {} snippets\n'.format(len(new_snippet_list_sorted[:MAX])))
 
-OUTFILE = dir_ + '/' + OUTFILE_NAME
-print('Writing {} combined snippets json to {}'.format(len(combined), OUTFILE))
-json.dump(combined, open(OUTFILE, 'w'))
+OUTFILE_NAME = 'snippets_combined_{}_{}.json'.format(len(combined), MAX)
+OUTFILE_PATH = dir_ + '/' + OUTFILE_NAME
+print('Writing {} combined snippets (over {} products) to {}'.format(len(combined), len(valid_asins), OUTFILE_PATH))
+
+json.dump(combined, open(OUTFILE_PATH, 'w'))
 
