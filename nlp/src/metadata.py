@@ -3,6 +3,7 @@ import gzip
 import json
 import csv
 import collections
+import pathlib2 as pathlib
 
 if len(sys.argv) < 2:
     print('Usage:  python metadata.py ASIN_1 [ASIN_2, ...]')
@@ -11,8 +12,11 @@ if len(sys.argv) < 2:
 FILENAME = 'meta_Electronics.json.gz'
 ASINS = set(sys.argv[1:])
 METADATA_COLUMNS = ['id', 'title', 'categories', 'description', 'image_url']
-OUTFILE = 'asin_subset_metadata.json'
+OUTPUT_DIR = '../output/metadata'
+OUTFILE = 'metadata_{}.json'.format('_'.join(ASINS))
 
+# make sure OUTPUT_DIR exists
+pathlib.Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
 def get_metadata_lines():
     with gzip.open(FILENAME, 'r') as f:
@@ -78,6 +82,6 @@ lines = get_metadata_lines_subset(ASINS)
 print("\nFormatting metadata for data store...\n")
 formatted_metadatas = (format_metadata_dict(metadata_dict)
                        for metadata_dict in lines)
-export_json(formatted_metadatas, OUTFILE)
+export_json(formatted_metadatas, OUTPUT_DIR + '/' + OUTFILE)
 
 # export_to_csv(formatted_metadatas)
