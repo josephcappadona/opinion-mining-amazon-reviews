@@ -22,6 +22,7 @@ LEXICON_FILEPATH = "./lexicon.txt"
 CLASS_PICKLE = "./clustering/results/clean-classes.pkl"
 OUTPUT_DIR = "../output"
 MIN_THRESHOLD = 0.05
+SENTIMENT_THRESHOLD = 0.1
 
 
 # Start the CoreNLP server with:
@@ -81,13 +82,22 @@ def get_sorted_classes(features_count, MIN_NUM_REVIEWS):
     sorted_classes = sorted(features_by_class.values(), key=lambda x: x[1], reverse=True)
     return sorted_classes
 
+# Returns 1 minus obj score or max of abs of all pos/neg scores. All 0's if no synsets.
 def is_sentiment_bearing(adj):
-    if adj in neutral_lexicon:
-        return False
+    ss_count = 0
+    total_obj = 0
     for ss in wn.synsets(adj):
         if ss.pos() == "a" or ss.pos() == "s":
-            return True
-    return False
+            ss_count += 1
+            bd = swn.senti_synset(ss.name())
+            total_obj += bd.obj_score()
+            print(ss.name(), ss.definition(), bd)
+    if ss_count == 0:
+        avg_obj = 2 # Make result be -1 if lookup fails
+    else:
+        avg_obj = round(total_obj * 1.0 / ss_count, 3)
+    #print("{3} / subj: {2}".format(avg_scores[0], avg_scores[1], 1-avg_scores[2], adj))
+    return 1-avg_obj > SENTIMENT_THRESHOLD
 
 def filter_opinions(opinions, opinion_sentiments):
     is_sentiment_bearing_dict = {opinion: is_sentiment_bearing(opinion) for opinion in opinions}
@@ -195,6 +205,7 @@ def double_propagation_iterate(all_review_info,
         for feature, opinion in info['FO_dict'].items():
             if feature in features:
                 if opinion not in opinions:
+                    print('New opinion: ' + opinion)
                     new_opinions.add(opinion)
 
                     # if target has sentiment in current review
@@ -259,7 +270,7 @@ def double_propagation_iterate(all_review_info,
 def extract_features_opinions(reviews):
     features = set()
     features_count = defaultdict(int)
-    opinions = positive_lexicon.union(negative_lexicon)
+    opinions = positive_lexicon.union(negative_lexicon).union(neutral_lexicon)
     opinions_count = defaultdict(int)
     feature_opinions = defaultdict(list)
 
@@ -302,7 +313,7 @@ def extract_features_opinions(reviews):
     feature_words_by_review = defaultdict(set) # keep track of the feature words in each review
     opinion_words_by_review = defaultdict(set) # keep track of the opinion words in each review
     opinion_sentiments = {} # same sentiment for opinion words throughout the corpus (this is an assumption [Observation 2])
-    opinion_sentiments.update({op:(1 if op in positive_lexicon else -1) for op in opinions})
+    opinion_sentiments.update({op:(1 if op in positive_lexicon else -1 if op in negative_lexicon else 0) for op in opinions})
 
     while (True):
         #print("DP Iteration: {}".format(i))
