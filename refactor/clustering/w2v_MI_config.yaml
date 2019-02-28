@@ -1,0 +1,11 @@
+cbow: 1
+size: 50
+window: 8
+negative: 25
+hs: 0
+sample: 1e-4
+threads: 20
+iter: 15
+min-count: 25
+debug: 2
+classes: 50
