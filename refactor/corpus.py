@@ -44,9 +44,11 @@ class CorpusInfo(object):
                 self.sentence_id_to_review_id[sentence_id] = review_id
                 review_sentence_ids.append(sentence_id)
 
+                print(sentence_id, sentence)
                 sentence_dependencies = self.extract_noun_adj_dependencies(sentence)
                 review_sentence_dependencies.append(sentence_dependencies)
                 self.sentence_id_to_dependencies[sentence_id] = sentence_dependencies
+                print('\n')
 
             self.review_id_to_sentence_ids[review_id] = review_sentence_ids
             self.review_id_to_sentence_dependencies[review_id] = review_sentence_dependencies
@@ -60,7 +62,8 @@ class CorpusInfo(object):
         NN_to_NNs = defaultdict(list)
 
         sentence_parse, = nlp.raw_parse(sentence)
-        for (gov, gov_PoS), dependency, (dep, dep_PoS) in sentence_parse.triples():
+        trips = list(sentence_parse.triples()); print(trips)
+        for (gov, gov_PoS), dependency, (dep, dep_PoS) in trips:
 
             if not gov.isalpha() or not dep.isalpha():
                 continue
@@ -69,17 +72,17 @@ class CorpusInfo(object):
             dep = dep.lower()
             gov_PoS = gov_PoS[:2]
             dep_PoS = dep_PoS[:2]
-            if dependency == "nsubj" and dep_PoS == "NN" and gov_PoS == "JJ" and is_sentiment_bearing(gov):
+            if dependency == 'nsubj' and dep_PoS == 'NN' and gov_PoS == 'JJ':
                 JJ_to_NN[gov] = dep
                 NN_to_JJ[dep] = gov
-            elif dependency == "amod" and gov_PoS == "NN" and dep_PoS == "JJ" and is_sentiment_bearing(dep):
+            elif dependency == 'amod' and gov_PoS == 'NN' and dep_PoS == 'JJ':
                 JJ_to_NN[dep] = gov
                 NN_to_JJ[gov] = dep
-            elif dependency == "conj":
-                if gov_PoS == "JJ" and dep_PoS == "JJ" and is_sentiment_bearing(gov) and is_sentiment_bearing(dep):
+            elif dependency == 'conj':
+                if gov_PoS == 'JJ' and dep_PoS == 'JJ':
                     JJ_to_JJs[gov].append(dep)
                     JJ_to_JJs[dep].append(gov)
-                elif gov_PoS == "NN" and dep_PoS == "NN":
+                elif gov_PoS == 'NN' and dep_PoS == 'NN':
                     NN_to_NNs[gov].append(dep)
                     NN_to_NNs[dep].append(gov)
 
