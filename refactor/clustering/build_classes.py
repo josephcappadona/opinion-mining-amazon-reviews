@@ -13,7 +13,7 @@ def parse_config(config_filepath):
 if __name__ == '__main__':
 
     if len(args) != 4:
-        print('USAGE:  python build_clusters.py CORPUS_FILEPATH.txt OUTPUT_FILEPATH.txt CONFIG_FILEPATH.yaml')
+        print('USAGE:  python build_classes.py CORPUS_FILEPATH.txt OUTPUT_FILEPATH.txt CONFIG_FILEPATH.yaml')
     corpus_filepath = args[1]
     output_filepath = args[2]
     config_filepath = args[3]
