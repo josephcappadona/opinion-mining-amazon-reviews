@@ -28,10 +28,10 @@ class CorpusInfo(object):
         self.sentence_id_to_dependencies = {}
 
     def extract_dependency_information(self):
-
+        print('Extracting dependency information...')
         for review_id, review in enumerate(self.reviews):
-            if (review_id + 1) % (int(len(self.reviews) / 10) + 1) == 0:
-                print('Processing review %d of %d' % (review_id + 1, len(self.reviews)))
+            if review_id % 200 == 0:
+                print('\tProcessing review %d of %d' % (review_id + 1, len(self.reviews)))
 
             review_sentences = nltk.tokenize.sent_tokenize(review)
             review_sentence_ids = []
@@ -44,11 +44,9 @@ class CorpusInfo(object):
                 self.sentence_id_to_review_id[sentence_id] = review_id
                 review_sentence_ids.append(sentence_id)
 
-                print(sentence_id, sentence)
                 sentence_dependencies = self.extract_noun_adj_dependencies(sentence)
                 review_sentence_dependencies.append(sentence_dependencies)
                 self.sentence_id_to_dependencies[sentence_id] = sentence_dependencies
-                print('\n')
 
             self.review_id_to_sentence_ids[review_id] = review_sentence_ids
             self.review_id_to_sentence_dependencies[review_id] = review_sentence_dependencies
@@ -62,8 +60,7 @@ class CorpusInfo(object):
         NN_to_NNs = defaultdict(list)
 
         sentence_parse, = nlp.raw_parse(sentence)
-        trips = list(sentence_parse.triples()); print(trips)
-        for (gov, gov_PoS), dependency, (dep, dep_PoS) in trips:
+        for (gov, gov_PoS), dependency, (dep, dep_PoS) in sentence_parse.triples():
 
             if not gov.isalpha() or not dep.isalpha():
                 continue
