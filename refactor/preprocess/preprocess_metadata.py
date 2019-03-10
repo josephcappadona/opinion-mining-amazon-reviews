@@ -34,6 +34,8 @@ if __name__ == '__main__':
     product_categories = build_product_categories(metadata)
     save_product_categories(product_categories, category_metadata_output_filepath)
 
+    # sort categories by # of products within the category
+    product_categories_sorted = sorted(product_categories.keys(), key=lambda k: len(product_categories[k]), reverse=True)
     print('\nCategories:')
-    for category in product_categories:
-        print('\t"%s"' % category)
+    for category in product_categories_sorted:
+        print('\t(%d) "%s"' % (len(product_categories[category]), category))
