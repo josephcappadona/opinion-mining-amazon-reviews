@@ -59,7 +59,7 @@ class DoublePropagationInfo(object):
                             if opinion_sentiment > 0:
                                 dp_info.feature_to_pos_sentiment_reviews[NN].append(review_id)
                                 dp_info.feature_to_pos_sentiment_sentences[NN].append(sentence_id)
-                            elif opinion_sentiments[opinion] < 0:
+                            elif opinion_sentiment < 0:
                                 dp_info.feature_to_neg_sentiment_reviews[NN].append(review_id)
                                 dp_info.feature_to_neg_sentiment_sentences[NN].append(sentence_id)
 
