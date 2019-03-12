@@ -42,7 +42,8 @@ class DoublePropagationInfo(object):
                 for JJ, NN in JJ_to_NN.items():
                     if JJ in dp_info.opinions: # if we know this JJ is an opinion word
 
-                        if NN not in dp_info.features:
+                        if NN not in dp_info.features and NN not in new_features:
+                            print('New feature: %s' % NN)
                             new_features.add(NN) # we have found a new feature word
 
                         # have we processed JJ in this sentence already?
@@ -69,7 +70,7 @@ class DoublePropagationInfo(object):
                 for NN, JJ in NN_to_JJ.items():
                     if NN in dp_info.features:
 
-                        if JJ not in dp_info.opinion_sentiments: # if JJ is a new opinion word
+                        if JJ not in dp_info.opinion_sentiments and JJ not in new_opinions: # if JJ is a new opinion word
                             print('New opinion: %s' % JJ)
                             new_opinions.add(JJ)
                             dp_info.opinion_to_sentence_ids[JJ].add(sentence_id)
@@ -95,7 +96,7 @@ class DoublePropagationInfo(object):
 
                             dp_info.opinion_to_sentence_ids[JJ_2].add(sentence_id)
 
-                            if JJ_2 not in dp_info.opinions:
+                            if JJ_2 not in dp_info.opinions and JJ_2 not in new_opinions:
                                 print('New opinion: %s' % JJ_2)
                                 new_opinions.add(JJ_2)
                                 dp_info.opinion_sentiments[JJ_2] = dp_info.opinion_sentiments[JJ_1]
@@ -108,7 +109,7 @@ class DoublePropagationInfo(object):
                     if dp_info.review_id_to_feature_sentiments[review_id][NN_1]: # if NN_1 has sentiment in this review
                         for NN_2 in NNs:
 
-                            if NN_2 not in dp_info.features:
+                            if NN_2 not in dp_info.features and NN_2 not in new_features:
                                 print('New feature: %s' % NN_2)
                                 new_features.add(NN_2)
 
