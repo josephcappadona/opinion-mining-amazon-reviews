@@ -21,6 +21,4 @@ if __name__ == '__main__':
     corpus_info.extract_dependency_information()
     dp = DoublePropagationInfo()
     print(list(dp.iterate(corpus_info)))
-    print(list(dp.iterate(corpus_info)))
-    print(list(dp.iterate(corpus_info)))
 
