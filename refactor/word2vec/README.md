@@ -1,15 +1,17 @@
 
 ### Example
 ```
-wget -O - http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/reviews_Musical_Instruments_5.json.gz | gunzip > musical_instruments_reviews.json
+sh install_word2vec.sh
 
-python preprocess_corpus.py musical_instruments_reviews.json musical_instruments_corpus.txt
-python build_classes.py ../../../word2vec/word2vec musical_instruments_corpus.txt musical_instruments_classes.txt w2v_sample_config.yaml
+cp ../preprocess/electronics_servers_reviews.json .
+
+python preprocess_corpus.py electronics_servers_reviews.json electronics_servers_corpus.txt
+python build_classes.py word2vec/word2vec electronics_servers_corpus.txt electronics_servers_classes.txt w2v_sample_config.yaml
 ```
 
 ### Sample Output
 ```
-with open('musical_instruments_reviews.json') as f:
+with open('electronics_servers_reviews.json') as f:
     for line in f:
         review_json = json.loads(line)
 
@@ -18,12 +20,12 @@ with open('musical_instruments_reviews.json') as f:
         review_text = review_json['reviewText']
         print(asin, rating, review_text)
 
-with open('musical_instruments_classes.txt', 'rt') as f:
+with open('electronics_servers_classes.txt', 'rt') as f:
     for line in f:
         word, class_id = line.split()
         print(word, class_id)
 
-with open('musical_instruments_corpus.txt', 'rt') as f:
+with open('electronics_servers_corpus.txt', 'rt') as f:
     for line in f:
         sentence = line.strip()
         print(sentence)
