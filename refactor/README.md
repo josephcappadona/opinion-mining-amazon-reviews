@@ -33,3 +33,10 @@ Downloads [Stanford CoreNLP](https://stanfordnlp.github.io/CoreNLP/) library. Co
 `extract.py` combines `corpus.py` and `double_prop.py` into a single script that extracts dependency information from the corpus and subsequently runs the double propagation algorithm until no new feature or opinion words are found.
 
 `test.py` takes in review data, extracts the dependency information, and runs one iteration of double propagation. This serves to simply demonstrate sample output of the double propagation algorithm.
+
+
+## TODOs
+
+* Compile double propagation output into tables + graphics for analysis
+
+* Build functions to look at correlation between opinion word sentiment and the propability that the word occurs in a positive review vs negative review, possibly use this information in lieu of how sentiment is propgated in the NN->JJ case (Intra-review Rule)
