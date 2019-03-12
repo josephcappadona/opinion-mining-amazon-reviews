@@ -32,7 +32,7 @@ def json_dump_reviews(reviews, output_filepath):
     print('Dumping %d reviews to \'%s\'...' % (len(reviews), output_filepath))
     with open(output_filepath, 'w+t') as filtered_reviews_file:
         for review in reviews:
-            filtered_reviews_file.write(json.dumps(review))
+            filtered_reviews_file.write(json.dumps(review) + '\n')
 
 if __name__ == '__main__':
 
