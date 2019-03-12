@@ -6,8 +6,9 @@ from nltk.tokenize import sent_tokenize, word_tokenize
 def get_reviews(reviews_filepath):
     with open(reviews_filepath, 'rt') as reviews_file:
         for line in reviews_file:
-            review_json = json.loads(line)
-            yield review_json['reviewText']
+            if line:
+                review_json = json.loads(line)
+                yield review_json['reviewText']
 
 def clean_sentence(sentence):
     cleaned_words = [word.lower() for word in word_tokenize(sentence) if word.isalnum()]
