@@ -40,3 +40,5 @@ Downloads [Stanford CoreNLP](https://stanfordnlp.github.io/CoreNLP/) library. Co
 * Compile double propagation output into tables + graphics for analysis
 
 * Build functions to look at correlation between opinion word sentiment and the propability that the word occurs in a positive review vs negative review, possibly use this information (or VADER information) in lieu of how sentiment is propgated in the NN->JJ case (Intra-review Rule)
+
+* change example category to one with smaller files
