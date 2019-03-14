@@ -1,5 +1,5 @@
 
-### Example
+### Usage
 ```
 sh install_corenlp.sh
 
