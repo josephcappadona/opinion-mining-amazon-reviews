@@ -1,5 +1,5 @@
 
-### Example
+### Usage
 ```
 sh install_word2vec.sh
 
@@ -9,17 +9,8 @@ python preprocess_corpus.py electronics_servers_reviews.json electronics_servers
 python build_classes.py word2vec/word2vec electronics_servers_corpus.txt electronics_servers_classes.txt w2v_sample_config.yaml
 ```
 
-### Sample Output
+### Data Format
 ```
-with open('electronics_servers_reviews.json') as f:
-    for line in f:
-        review_json = json.loads(line)
-
-        asin = review_json['asin']
-        rating = review_json['overall']
-        review_text = review_json['reviewText']
-        print(asin, rating, review_text)
-
 with open('electronics_servers_classes.txt', 'rt') as f:
     for line in f:
         word, class_id = line.split()
