@@ -1,5 +1,5 @@
 
-### Example
+### Usage
 
 ```
 wget -O - http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/meta_Electronics.json.gz | gunzip > electronics_metadata.json
