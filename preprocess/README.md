@@ -9,6 +9,13 @@ python preprocess_metadata.py electronics_metadata.json electronics_categories.p
 python filter_reviews.py electronics_reviews.json electronics_categories.pkl "Servers" electronics_servers_reviews.json
 ```
 
+### Details
+
+`preprocess_metadata.py` aggregates the metadata information into a data structure that allows one to easily find all products in a given subcategory (i.e., it forms a dictionary from category name to category products).
+
+`filter_reviews.py` takes in all of the reviews for a category and outputs a file with only the reviews for a specified subcategory. For example, it will take in all Electronics reviews and output only those that fall in the "Headphones" subcategory.
+
+
 ### Data Format
 ```
 with open('electronics_metadata.json', 'rt') as f:
